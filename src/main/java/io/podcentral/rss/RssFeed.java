@@ -7,5 +7,5 @@ import lombok.Data;
 @Data
 @XmlRootElement(name = "rss")
 public class RssFeed {
-	private Channel channel;
+  private Channel channel;
 }
