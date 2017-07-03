@@ -52,7 +52,7 @@ public class GetArticle implements RequestHandler<ServerlessInput, ServerlessOut
 //            String s3ObjectKey = item.get(ARTICLE_TABLE_KEY_NAME).getS();
 //            String content = IOUtils.toString(s3.getObject(new GetObjectRequest(ARTICLE_BUCKET_NAME, s3ObjectKey)).getObjectContent());
             output.setStatusCode(200);
-            output.setBody("Hello World!");
+            output.setBody(serverlessInput.getBody());
         } catch (Exception e) {
             output.setStatusCode(500);
             StringWriter sw = new StringWriter();

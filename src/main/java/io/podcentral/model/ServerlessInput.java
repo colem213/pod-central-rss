@@ -2,6 +2,9 @@ package io.podcentral.model;
 
 import java.util.Map;
 
+import lombok.ToString;
+
+@ToString
 public class ServerlessInput {
 
     private String resource;
