@@ -7,18 +7,20 @@ import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import io.podcentral.model.ServerlessInput;
-
 public class TestUtil {
-	private TestUtil() {
-	}
+  private TestUtil() {}
 
-	private final static ObjectMapper mapper = new ObjectMapper();
+  private final static ObjectMapper mapper = new ObjectMapper();
 
-	public static ServerlessInput loadInputFromClasspath(String filename)
-			throws JsonParseException, JsonMappingException, IOException {
-		InputStream reqStream = TestUtil.class.getClass().getResourceAsStream("/" + filename);
-		ServerlessInput input = mapper.readValue(reqStream, ServerlessInput.class);
-		return input;
-	}
+  public static <T> T loadJsonFromClasspath(Class<T> clazz, String filename)
+      throws JsonParseException, JsonMappingException, IOException {
+    InputStream reqStream = loadInputStreamFromClasspath(filename);
+    T input = mapper.readValue(reqStream, clazz);
+    return input;
+  }
+
+  public static InputStream loadInputStreamFromClasspath(String filename) {
+    InputStream reqStream = TestUtil.class.getClass().getResourceAsStream("/" + filename);
+    return reqStream;
+  }
 }

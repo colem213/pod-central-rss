@@ -2,7 +2,8 @@
     @XmlJavaTypeAdapter(value = BoolAdapter.class, type = Boolean.class)})
 @XmlSchema(
     xmlns = {@javax.xml.bind.annotation.XmlNs(prefix = "itunes", namespaceURI = XmlNs.ITUNES),
-        @javax.xml.bind.annotation.XmlNs(prefix = "media", namespaceURI = XmlNs.MEDIA)},
+        @javax.xml.bind.annotation.XmlNs(prefix = "media", namespaceURI = XmlNs.MEDIA),
+        @javax.xml.bind.annotation.XmlNs(prefix = "atom", namespaceURI = XmlNs.ATOM)},
     elementFormDefault = javax.xml.bind.annotation.XmlNsForm.UNQUALIFIED)
 package io.podcentral.rss;
 

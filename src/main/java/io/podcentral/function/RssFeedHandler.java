@@ -8,6 +8,13 @@ import java.util.stream.Collectors;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.Unmarshaller;
 
+import com.amazonaws.client.builder.AwsClientBuilder.EndpointConfiguration;
+import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
+import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClientBuilder;
+import com.amazonaws.services.dynamodbv2.datamodeling.ConversionSchemas;
+import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper;
+import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapperConfig;
+import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapperConfig.SaveBehavior;
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -27,6 +34,9 @@ import lombok.extern.log4j.Log4j2;
  */
 @Log4j2
 public class RssFeedHandler implements RequestHandler<ServerlessInput, ServerlessOutput> {
+  HttpResponse<InputStream> rsp;
+  private static JAXBContext CTX;
+
   @Override
   public ServerlessOutput handleRequest(ServerlessInput input, Context context) {
     ServerlessOutput output = new ServerlessOutput();
@@ -36,9 +46,7 @@ public class RssFeedHandler implements RequestHandler<ServerlessInput, Serverles
       FeedForm form = mapper.readValue(input.getBody(), FeedForm.class);
       log.info("Url={}", form.getFeedUrl());
 
-      JAXBContext jc = JAXBContext.newInstance(RssFeed.class);
-      Unmarshaller des = jc.createUnmarshaller();
-      HttpResponse<InputStream> rsp = Unirest.get(form.getFeedUrl()).asBinary();
+      rsp = rsp == null ? Unirest.get(form.getFeedUrl()).asBinary() : rsp;
       if (log.isDebugEnabled()) {
         String headers = String.join(", ", rsp.getHeaders().entrySet().stream().map(
             entry -> String.format("[%s=%s]", entry.getKey(), String.join(", ", entry.getValue())))
@@ -48,7 +56,28 @@ public class RssFeedHandler implements RequestHandler<ServerlessInput, Serverles
       if (rsp.getStatus() < 200 || rsp.getStatus() >= 400) {
         throw new Exception("Failed request: " + form.getFeedUrl());
       }
+
+      CTX = CTX == null ? JAXBContext.newInstance(RssFeed.class) : CTX;
+      Unmarshaller des = CTX.createUnmarshaller();
       RssFeed feed = (RssFeed) des.unmarshal(rsp.getBody());
+
+      String endpoint = System.getenv("DYNAMO_ENDPOINT");
+
+      AmazonDynamoDBClientBuilder builder = AmazonDynamoDBClientBuilder.standard();
+      if (endpoint != null) {
+        builder.setEndpointConfiguration(new EndpointConfiguration(endpoint, ""));
+      }
+      AmazonDynamoDB client = builder.build();
+
+      DynamoDBMapper dynDbMapper = new DynamoDBMapper(client);
+      DynamoDBMapperConfig config = new DynamoDBMapperConfig.Builder()
+          .withSaveBehavior(SaveBehavior.UPDATE_SKIP_NULL_ATTRIBUTES)
+          .withConversionSchema(ConversionSchemas.V2).build();
+      dynDbMapper.save(feed.getChannel(), config);
+      feed.getChannel().getItems().stream()
+          .forEach(item -> item.setChannelId(feed.getChannel().getId()));
+      dynDbMapper.batchSave(feed.getChannel().getItems());
+
       log.trace(feed);
 
       output.setStatusCode(200);
@@ -57,6 +86,9 @@ public class RssFeedHandler implements RequestHandler<ServerlessInput, Serverles
       StringWriter sw = new StringWriter();
       e.printStackTrace(new PrintWriter(sw));
       output.setBody(sw.toString());
+      log.error(output);
+    } finally {
+      rsp = null;
     }
     return output;
   }
