@@ -15,6 +15,8 @@ import com.amazonaws.services.dynamodbv2.datamodeling.ConversionSchemas;
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper;
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapperConfig;
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapperConfig.SaveBehavior;
+import com.amazonaws.services.dynamodbv2.model.CreateTableRequest;
+import com.amazonaws.services.dynamodbv2.model.ProvisionedThroughput;
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -24,6 +26,8 @@ import com.mashape.unirest.http.Unirest;
 import io.podcentral.model.FeedForm;
 import io.podcentral.model.ServerlessInput;
 import io.podcentral.model.ServerlessOutput;
+import io.podcentral.rss.Channel;
+import io.podcentral.rss.Item;
 import io.podcentral.rss.RssFeed;
 import lombok.extern.log4j.Log4j2;
 
@@ -36,6 +40,8 @@ import lombok.extern.log4j.Log4j2;
 public class RssFeedHandler implements RequestHandler<ServerlessInput, ServerlessOutput> {
   HttpResponse<InputStream> rsp;
   private static JAXBContext CTX;
+
+  public static final String DYNAMO_ENDPOINT = "DYNAMO_ENDPOINT";
 
   @Override
   public ServerlessOutput handleRequest(ServerlessInput input, Context context) {
@@ -61,7 +67,7 @@ public class RssFeedHandler implements RequestHandler<ServerlessInput, Serverles
       Unmarshaller des = CTX.createUnmarshaller();
       RssFeed feed = (RssFeed) des.unmarshal(rsp.getBody());
 
-      String endpoint = System.getenv("DYNAMO_ENDPOINT");
+      String endpoint = System.getenv(DYNAMO_ENDPOINT);
 
       AmazonDynamoDBClientBuilder builder = AmazonDynamoDBClientBuilder.standard();
       if (endpoint != null) {
@@ -91,5 +97,27 @@ public class RssFeedHandler implements RequestHandler<ServerlessInput, Serverles
       rsp = null;
     }
     return output;
+  }
+
+  public static void main(String[] args) {
+    String endpoint = System.getenv(DYNAMO_ENDPOINT);
+
+    AmazonDynamoDBClientBuilder builder = AmazonDynamoDBClientBuilder.standard();
+    if (endpoint != null) {
+      builder.setEndpointConfiguration(new EndpointConfiguration(endpoint, ""));
+    }
+    AmazonDynamoDB client = builder.build();
+    DynamoDBMapper mapper = new DynamoDBMapper(client);
+
+    CreateTableRequest tableReq = mapper.generateCreateTableRequest(Channel.class);
+    ProvisionedThroughput thruPut = new ProvisionedThroughput(3L, 3L);
+    tableReq.setProvisionedThroughput(thruPut);
+    tableReq.getGlobalSecondaryIndexes().forEach(idx -> idx.setProvisionedThroughput(thruPut));
+    client.createTable(tableReq);
+
+    tableReq = mapper.generateCreateTableRequest(Item.class);
+    tableReq.setProvisionedThroughput(thruPut);
+    tableReq.getGlobalSecondaryIndexes().forEach(idx -> idx.setProvisionedThroughput(thruPut));
+    client.createTable(tableReq);
   }
 }
