@@ -38,7 +38,7 @@ import lombok.extern.log4j.Log4j2;
  */
 @Log4j2
 public class RssFeedHandler implements RequestHandler<ServerlessInput, ServerlessOutput> {
-  HttpResponse<InputStream> rsp;
+  HttpResponse<InputStream> mockRsp;
   private static JAXBContext CTX;
 
   public static final String DYNAMO_ENDPOINT = "DYNAMO_ENDPOINT";
@@ -52,7 +52,8 @@ public class RssFeedHandler implements RequestHandler<ServerlessInput, Serverles
       FeedForm form = mapper.readValue(input.getBody(), FeedForm.class);
       log.info("Url={}", form.getFeedUrl());
 
-      rsp = rsp == null ? Unirest.get(form.getFeedUrl()).asBinary() : rsp;
+      HttpResponse<InputStream> rsp =
+          mockRsp == null ? Unirest.get(form.getFeedUrl()).asBinary() : mockRsp;
       if (log.isDebugEnabled()) {
         String headers = String.join(", ", rsp.getHeaders().entrySet().stream().map(
             entry -> String.format("[%s=%s]", entry.getKey(), String.join(", ", entry.getValue())))
@@ -93,8 +94,6 @@ public class RssFeedHandler implements RequestHandler<ServerlessInput, Serverles
       e.printStackTrace(new PrintWriter(sw));
       output.setBody(sw.toString());
       log.error(output);
-    } finally {
-      rsp = null;
     }
     return output;
   }

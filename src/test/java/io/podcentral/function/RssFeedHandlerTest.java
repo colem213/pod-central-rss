@@ -1,7 +1,6 @@
 package io.podcentral.function;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -37,10 +36,9 @@ public class RssFeedHandlerTest {
 
 
     RssFeedHandler handler = new RssFeedHandler();
-    handler.rsp = rsp;
+    handler.mockRsp = rsp;
     ServerlessOutput out = handler.handleRequest(input, null);
 
-    assertNull("Must set rsp to null", handler.rsp);
     assertEquals(new Integer(200), out.getStatusCode());
   }
 }
