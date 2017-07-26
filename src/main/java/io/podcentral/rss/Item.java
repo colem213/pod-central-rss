@@ -4,6 +4,7 @@ import java.util.Date;
 import java.util.List;
 
 import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlElements;
 import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
 import org.eclipse.persistence.oxm.annotations.XmlPath;
@@ -34,7 +35,8 @@ public class Item {
   @DynamoDBIndexRangeKey(globalSecondaryIndexName = "itemsByChannel")
   @DynamoDBRangeKey
   private Date pubDate;
-  @XmlElement(name = "content", namespace = XmlNs.MEDIA)
+  @XmlElements({@XmlElement(name = "content", namespace = XmlNs.MEDIA),
+      @XmlElement(name = "enclosure")})
   private List<MediaContent> media;
   @XmlJavaTypeAdapter(CsvAdapter.class)
   @XmlElement(namespace = XmlNs.MEDIA)

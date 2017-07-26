@@ -27,7 +27,7 @@ public class RssFeedHandlerTest {
   public void testFeedRetreival() throws IOException, UnirestException {
     MockitoAnnotations.initMocks(this);
     BaseRequest feedReq = mock(BaseRequest.class);
-    InputStream feedStream = TestUtil.loadInputStreamFromClasspath("feed.xml");
+    InputStream feedStream = TestUtil.loadInputStreamFromClasspath("undisclosed-feed.xml");
     when(rsp.getStatus()).thenReturn(200);
     when(rsp.getBody()).thenReturn(feedStream);
     when(feedReq.asBinary()).thenReturn(rsp);
