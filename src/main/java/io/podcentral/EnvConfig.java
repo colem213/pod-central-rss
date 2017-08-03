@@ -13,7 +13,7 @@ import lombok.NoArgsConstructor;
 public class EnvConfig {
   public static final String DYNAMO_ENDPOINT = "DYNAMO_ENDPOINT";
 
-  public static DynamoDBMapper getDynamoDbMapper() {
+  public static AmazonDynamoDB getDynamoDbClient() {
     String endpoint = System.getenv(DYNAMO_ENDPOINT);
 
     AmazonDynamoDBClientBuilder builder = AmazonDynamoDBClientBuilder.standard();
@@ -21,6 +21,11 @@ public class EnvConfig {
       builder.setEndpointConfiguration(new EndpointConfiguration(endpoint, ""));
     }
     AmazonDynamoDB client = builder.build();
+    return client;
+  }
+
+  public static DynamoDBMapper getDynamoDbMapper() {
+    AmazonDynamoDB client = getDynamoDbClient();
     DynamoDBMapperConfig config = new DynamoDBMapperConfig.Builder()
         .withTableNameResolver(new EnvTableNameResolver()).build();
     return new DynamoDBMapper(client, config);
