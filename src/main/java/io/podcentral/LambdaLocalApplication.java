@@ -23,9 +23,9 @@ public class LambdaLocalApplication {
     SpringApplication.run(LambdaLocalApplication.class, args);
   }
 
-  @PostMapping("/")
+  @PostMapping("/subscribe")
   @ResponseBody
-  ResponseEntity<String> lambda(@RequestBody String body) {
+  ResponseEntity<String> subscribe(@RequestBody String body) {
     ServerlessInput input = new ServerlessInput();
     input.setBody(body);
     ServerlessOutput output = handler.handleRequest(input, null);

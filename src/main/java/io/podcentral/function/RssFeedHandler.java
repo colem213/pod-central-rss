@@ -1,24 +1,30 @@
 package io.podcentral.function;
 
 import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
 
+import org.reflections.Reflections;
 import org.springframework.http.HttpStatus;
 
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper;
+import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper.FailedBatch;
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBQueryExpression;
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBSaveExpression;
-import com.amazonaws.services.dynamodbv2.datamodeling.PaginatedList;
-import com.amazonaws.services.dynamodbv2.datamodeling.PaginatedQueryList;
+import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBTable;
 import com.amazonaws.services.dynamodbv2.model.AttributeValue;
 import com.amazonaws.services.dynamodbv2.model.ConditionalCheckFailedException;
 import com.amazonaws.services.dynamodbv2.model.CreateTableRequest;
@@ -34,10 +40,12 @@ import com.mashape.unirest.http.exceptions.UnirestException;
 
 import io.podcentral.EnvConfig;
 import io.podcentral.TableConstants;
+import io.podcentral.entity.ChannelUrl;
+import io.podcentral.entity.Subscription;
+import io.podcentral.model.Error;
 import io.podcentral.model.FeedForm;
 import io.podcentral.model.ServerlessInput;
 import io.podcentral.model.ServerlessOutput;
-import io.podcentral.model.Subscription;
 import io.podcentral.rss.Channel;
 import io.podcentral.rss.Item;
 import io.podcentral.rss.RssFeed;
@@ -63,58 +71,71 @@ public class RssFeedHandler implements RequestHandler<ServerlessInput, Serverles
 
     try {
       FeedForm form = mapper.readValue(input.getBody(), FeedForm.class);
-      log.info("Url={}", form.getFeedUrl());
+      Optional<ChannelUrl> url = Optional.of(new ChannelUrl(form.getFeedUrl()));
+      log.info("RawUrl={}", form.getFeedUrl());
+      log.info("Url={}", url.get().getUrl());
 
       DynamoDBMapper dbMapper = EnvConfig.getDynamoDbMapper();
 
-      Optional<Channel> channel = queryForChannelByUrl(dbMapper, form.getFeedUrl());
-      if (channel.isPresent()) {
-        Subscription sub = new Subscription(userId, channel.get().getId(), new Date());
+      Optional<ChannelUrl> dbUrl = Optional.ofNullable(dbMapper.load(url.get()));
+      if (dbUrl.isPresent()) {
+        url = dbUrl;
+        Subscription sub = new Subscription(userId, url.get().getId(), new Date());
 
         try {
-          saveSubscriptionIfNotExists(dbMapper, sub);
+          dbMapper.save(sub, new DynamoDBSaveExpression().withExpectedEntry("channelId",
+              new ExpectedAttributeValue().withExists(false)));
         } catch (ConditionalCheckFailedException e) {
           log.warn("Subscription already exists!\t{}", sub);
-          return ServerlessOutput.builder().statusCode(HttpStatus.BAD_REQUEST.value()).build();
+          return ServerlessOutput.builder().statusCode(HttpStatus.BAD_REQUEST.value())
+              .body(mapper.writeValueAsString(new Error("SubscriptonAlreadyExistsException",
+                  "A subscription to this channel already exists!")))
+              .build();
         }
 
-        queryForItemsByChannel(dbMapper, channel);
+        Channel channel = new Channel(url.get().getId());
+        channel = dbMapper.load(channel);
+        queryItemsForChannel(dbMapper, channel);
         return ServerlessOutput.builder().statusCode(HttpStatus.CREATED.value())
-            .body(mapper.writeValueAsString(channel.get())).build();
+            .body(mapper.writeValueAsString(channel)).build();
       } else {
-        HttpResponse<InputStream> rsp = fetchFeedFromUrl(form.getFeedUrl());
+        HttpResponse<InputStream> rsp = fetchFeedFromUrl(url.get().getUrl());
         if (rsp.getStatus() < 200 || rsp.getStatus() >= 400) {
-          return ServerlessOutput.builder().statusCode(HttpStatus.BAD_REQUEST.value()).build();
+          log.warn("StatusCode={} from url={}", rsp.getStatus(), url.get().getUrl());
+          return ServerlessOutput.builder().statusCode(HttpStatus.BAD_REQUEST.value())
+              .body(mapper.writeValueAsString(new Error("UnreachableException",
+                  "Unable to get a response from " + url.get().getUrl())))
+              .build();
         }
 
         CTX = CTX == null ? JAXBContext.newInstance(RssFeed.class) : CTX;
         Unmarshaller des = CTX.createUnmarshaller();
-        Optional<RssFeed> feed = Optional.empty();
+        RssFeed feed;
         try {
-          feed = Optional.of((RssFeed) des.unmarshal(rsp.getBody()));
+          feed = (RssFeed) des.unmarshal(rsp.getBody());
         } catch (JAXBException e) {
-          return ServerlessOutput.builder().statusCode(HttpStatus.BAD_REQUEST.value()).build();
-        }
-
-        channel = Optional.of(feed.get().getChannel());
-        channel.get().setFeedUrl(form.getFeedUrl());
-        if (saveChannelIfNotExists(dbMapper, channel.get())) {
-          final String channelId = channel.get().getId();
-          channel.get().getItems().stream().forEach(item -> item.setChannelId(channelId));
-          dbMapper.batchSave(channel.get().getItems());
-        }
-        log.trace(feed);
-
-        Subscription sub = new Subscription(userId, channel.get().getId(), new Date());
-        try {
-          saveSubscriptionIfNotExists(dbMapper, sub);
-          return ServerlessOutput.builder().statusCode(HttpStatus.CREATED.value())
-              .body(mapper.writeValueAsString(channel.get())).build();
-        } catch (ConditionalCheckFailedException e) {
-          log.error("Error saving subscription!\t{}", sub);
-          return ServerlessOutput.builder().statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
+          log.error(e);
+          return ServerlessOutput.builder().statusCode(HttpStatus.BAD_REQUEST.value())
+              .body(mapper.writeValueAsString(new Error("InvalidResponseException",
+                  "Unable to parse feed received from " + url.get().getUrl())))
               .build();
         }
+
+        final String channelId = UUID.randomUUID().toString();
+        url.get().setId(channelId);
+        Subscription sub = new Subscription(userId, channelId, new Date());
+        Channel channel = feed.getChannel();
+        channel.setId(channelId);
+        channel.getItems().stream().forEach(item -> item.setChannelId(channelId));
+
+        List<Object> toSave = new ArrayList<Object>(Arrays.asList(url.get(), sub, channel));
+        toSave.addAll(channel.getItems());
+        List<FailedBatch> failed = dbMapper.batchSave(toSave);
+        failed.forEach(batchErr -> log.error(batchErr.getException()));
+        log.trace(feed);
+
+        return ServerlessOutput.builder().statusCode(HttpStatus.CREATED.value())
+            .body(mapper.writeValueAsString(channel)).build();
       }
     } catch (Exception e) {
       log.error(e);
@@ -123,59 +144,16 @@ public class RssFeedHandler implements RequestHandler<ServerlessInput, Serverles
     }
   }
 
-  Optional<Channel> queryForChannelByUrl(DynamoDBMapper mapper, String url) {
+  void queryItemsForChannel(DynamoDBMapper mapper, Channel channel) {
     Map<String, AttributeValue> eav = new HashMap<String, AttributeValue>(1);
-    eav.put(":url", new AttributeValue().withS(url));
-
-    DynamoDBQueryExpression<Channel> channelQuery =
-        new DynamoDBQueryExpression<Channel>().withIndexName(TableConstants.Channel.GSI_URL_INDEX)
-            .withConsistentRead(false).withKeyConditionExpression("feedUrl = :url")
-            .withExpressionAttributeValues(eav).withLimit(1).withSelect(Select.ALL_ATTRIBUTES);
-
-    PaginatedList<Channel> results = mapper.query(Channel.class, channelQuery);
-    if (!results.isEmpty()) {
-      return Optional.of(results.get(0));
-    } else {
-      return Optional.empty();
-    }
-  }
-
-  void queryForItemsByChannel(DynamoDBMapper mapper, Optional<Channel> channel) {
-    if (!channel.isPresent())
-      return;
-
-    Map<String, AttributeValue> eav = new HashMap<String, AttributeValue>(1);
-    eav.put(":id", new AttributeValue().withS(channel.get().getId()));
+    eav.put(":id", new AttributeValue().withS(channel.getId()));
 
     DynamoDBQueryExpression<Item> query =
         new DynamoDBQueryExpression<Item>().withIndexName(TableConstants.Item.GSI_CHANNEL_INDEX)
             .withConsistentRead(false).withKeyConditionExpression("channelId = :id")
             .withExpressionAttributeValues(eav).withSelect(Select.ALL_ATTRIBUTES);
 
-    PaginatedQueryList<Item> items = mapper.query(Item.class, query);
-    channel.get().setItems(items);
-  }
-
-  boolean saveChannelIfNotExists(DynamoDBMapper mapper, Channel channel) {
-    DynamoDBSaveExpression saveExpr = new DynamoDBSaveExpression().withExpectedEntry("feedUrl",
-        new ExpectedAttributeValue(new AttributeValue(channel.getFeedUrl())).withExists(false));
-
-    try {
-      mapper.save(channel, saveExpr);
-      return true;
-    } catch (ConditionalCheckFailedException e) {
-      log.warn("Channel already exists!\t{}", channel);
-      return false;
-    }
-
-  }
-
-  void saveSubscriptionIfNotExists(DynamoDBMapper mapper, Subscription sub)
-      throws ConditionalCheckFailedException {
-    DynamoDBSaveExpression saveExpr = new DynamoDBSaveExpression().withExpectedEntry("channelId",
-        new ExpectedAttributeValue(new AttributeValue(sub.getChannelId())).withExists(false));
-
-    mapper.save(sub, saveExpr);
+    channel.setItems(mapper.query(Item.class, query));
   }
 
   HttpResponse<InputStream> fetchFeedFromUrl(String url) throws UnirestException, Exception {
@@ -193,19 +171,17 @@ public class RssFeedHandler implements RequestHandler<ServerlessInput, Serverles
     DynamoDBMapper mapper = EnvConfig.getDynamoDbMapper();
     AmazonDynamoDB client = EnvConfig.getDynamoDbClient();
 
-    CreateTableRequest tableReq = mapper.generateCreateTableRequest(Channel.class);
+    Reflections reflections = new Reflections("io.podcentral");
+    Set<Class<?>> annotated = reflections.getTypesAnnotatedWith(DynamoDBTable.class);
+
     ProvisionedThroughput thruPut = new ProvisionedThroughput(3L, 3L);
-    tableReq.setProvisionedThroughput(thruPut);
-    tableReq.getGlobalSecondaryIndexes().forEach(idx -> idx.setProvisionedThroughput(thruPut));
-    client.createTable(tableReq);
-
-    tableReq = mapper.generateCreateTableRequest(Item.class);
-    tableReq.setProvisionedThroughput(thruPut);
-    tableReq.getGlobalSecondaryIndexes().forEach(idx -> idx.setProvisionedThroughput(thruPut));
-    client.createTable(tableReq);
-
-    tableReq = mapper.generateCreateTableRequest(Subscription.class);
-    tableReq.setProvisionedThroughput(thruPut);
-    client.createTable(tableReq);
+    for (Class<?> table : annotated) {
+      CreateTableRequest tableReq = mapper.generateCreateTableRequest(table);
+      tableReq.setProvisionedThroughput(thruPut);
+      if (tableReq.getGlobalSecondaryIndexes() != null) {
+        tableReq.getGlobalSecondaryIndexes().forEach(idx -> idx.setProvisionedThroughput(thruPut));
+      }
+      client.createTable(tableReq);
+    }
   }
 }
