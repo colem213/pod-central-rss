@@ -6,14 +6,18 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.amazonaws.services.lambda.runtime.ClientContext;
 import com.amazonaws.services.lambda.runtime.CognitoIdentity;
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.LambdaLogger;
+import com.auth0.jwt.JWT;
+import com.auth0.jwt.interfaces.DecodedJWT;
 
 import io.podcentral.function.RssFeedHandler;
 import io.podcentral.model.ServerlessInput;
@@ -31,9 +35,16 @@ public class LambdaLocalApplication {
     SpringApplication.run(LambdaLocalApplication.class, args);
   }
 
+  @CrossOrigin(origins = "*")
   @PostMapping("/subscribe")
   @ResponseBody
-  ResponseEntity<String> subscribe(@RequestBody String body) {
+  ResponseEntity<String> subscribe(
+      @RequestHeader(name = "Authorization", required = false) String auth,
+      @RequestBody String body) {
+    if (auth != null) {
+      DecodedJWT jwt = JWT.decode(auth.split(" ")[1]);
+      userId = jwt.getSubject();
+    }
     ServerlessInput input = new ServerlessInput();
     input.setBody(body);
     ServerlessOutput output = handler.handleRequest(input, new DefaultContext());
