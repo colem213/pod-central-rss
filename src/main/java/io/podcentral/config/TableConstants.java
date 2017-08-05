@@ -1,4 +1,4 @@
-package io.podcentral;
+package io.podcentral.config;
 
 public class TableConstants {
   public static class Channel {

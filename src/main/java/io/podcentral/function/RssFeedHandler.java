@@ -40,8 +40,8 @@ import com.mashape.unirest.http.HttpResponse;
 import com.mashape.unirest.http.Unirest;
 import com.mashape.unirest.http.exceptions.UnirestException;
 
-import io.podcentral.EnvConfig;
-import io.podcentral.TableConstants;
+import io.podcentral.config.EnvConfig;
+import io.podcentral.config.TableConstants;
 import io.podcentral.entity.ChannelUrl;
 import io.podcentral.entity.Subscription;
 import io.podcentral.model.Error;

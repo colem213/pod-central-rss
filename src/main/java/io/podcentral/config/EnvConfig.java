@@ -1,4 +1,4 @@
-package io.podcentral;
+package io.podcentral.config;
 
 import com.amazonaws.client.builder.AwsClientBuilder.EndpointConfiguration;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;

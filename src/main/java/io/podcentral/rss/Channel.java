@@ -12,7 +12,7 @@ import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBHashKey;
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBIgnore;
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBTable;
 
-import io.podcentral.TableConstants;
+import io.podcentral.config.TableConstants;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;

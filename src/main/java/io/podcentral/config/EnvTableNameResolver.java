@@ -1,4 +1,4 @@
-package io.podcentral;
+package io.podcentral.config;
 
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapperConfig;
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapperConfig.DefaultTableNameResolver;

@@ -15,7 +15,7 @@ import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBIndexHashKey;
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBIndexRangeKey;
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBTable;
 
-import io.podcentral.TableConstants;
+import io.podcentral.config.TableConstants;
 import io.podcentral.xml.CsvAdapter;
 import lombok.Data;
 import lombok.NoArgsConstructor;
