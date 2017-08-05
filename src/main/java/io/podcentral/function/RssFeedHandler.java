@@ -34,6 +34,8 @@ import com.amazonaws.services.dynamodbv2.model.Select;
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
 import com.mashape.unirest.http.HttpResponse;
 import com.mashape.unirest.http.Unirest;
 import com.mashape.unirest.http.exceptions.UnirestException;
@@ -68,6 +70,8 @@ public class RssFeedHandler implements RequestHandler<ServerlessInput, Serverles
     }
     String userId = context.getIdentity().getIdentityId();
     ObjectMapper mapper = new ObjectMapper();
+    mapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+    mapper.setDateFormat(new ISO8601DateFormat());
 
     try {
       FeedForm form = mapper.readValue(input.getBody(), FeedForm.class);
@@ -114,7 +118,7 @@ public class RssFeedHandler implements RequestHandler<ServerlessInput, Serverles
         try {
           feed = (RssFeed) des.unmarshal(rsp.getBody());
         } catch (JAXBException e) {
-          log.error(e);
+          log.error("Failed parsing RSS Feed", e);
           return ServerlessOutput.builder().statusCode(HttpStatus.BAD_REQUEST.value())
               .body(mapper.writeValueAsString(new Error("InvalidResponseException",
                   "Unable to parse feed received from " + url.get().getUrl())))
@@ -131,14 +135,15 @@ public class RssFeedHandler implements RequestHandler<ServerlessInput, Serverles
         List<Object> toSave = new ArrayList<Object>(Arrays.asList(url.get(), sub, channel));
         toSave.addAll(channel.getItems());
         List<FailedBatch> failed = dbMapper.batchSave(toSave);
-        failed.forEach(batchErr -> log.error(batchErr.getException()));
+        failed.forEach(
+            batchErr -> log.error("Failed to save item to DynamoDB", batchErr.getException()));
         log.trace(feed);
 
         return ServerlessOutput.builder().statusCode(HttpStatus.CREATED.value())
             .body(mapper.writeValueAsString(channel)).build();
       }
     } catch (Exception e) {
-      log.error(e);
+      log.error("", e);
       return ServerlessOutput.builder().statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
           .build();
     }
@@ -162,7 +167,7 @@ public class RssFeedHandler implements RequestHandler<ServerlessInput, Serverles
       String headers = String.join(", ", rsp.getHeaders().entrySet().stream().map(
           entry -> String.format("[%s=%s]", entry.getKey(), String.join(", ", entry.getValue())))
           .collect(Collectors.toList()));
-      log.debug("Status Code={}, Headers={{}}", rsp.getStatus(), headers);
+      log.debug("StatusCode={}, Headers={{}}", rsp.getStatus(), headers);
     }
     return rsp;
   }
