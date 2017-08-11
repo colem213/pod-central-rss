@@ -34,7 +34,7 @@ public class ChannelUrl {
     this.url = ChannelUrl.normalizeUrl(url);
   }
 
-  public static String normalizeUrl(String url) throws URISyntaxException, MalformedURLException {
+  public static URI normalizeUri(String url) throws URISyntaxException, MalformedURLException {
     URI uri = new URI(url);
     if (uri.isOpaque()) {
       throw new IllegalArgumentException("URL must be server-based!");
@@ -42,7 +42,10 @@ public class ChannelUrl {
     uri = uri.normalize();
     int defaultPort = uri.toURL().getDefaultPort();
     int port = uri.getPort() == -1 || uri.getPort() == defaultPort ? -1 : uri.getPort();
-    uri = new URI(uri.getScheme(), null, uri.getHost(), port, uri.getPath(), null, null);
-    return uri.toString();
+    return new URI(uri.getScheme(), null, uri.getHost(), port, uri.getPath(), null, null);
+  }
+
+  public static String normalizeUrl(String url) throws URISyntaxException, MalformedURLException {
+    return normalizeUri(url).toString();
   }
 }

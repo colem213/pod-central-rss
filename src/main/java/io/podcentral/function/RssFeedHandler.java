@@ -1,6 +1,10 @@
 package io.podcentral.function;
 
+import java.io.IOException;
 import java.io.InputStream;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
@@ -10,12 +14,15 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
 
+import org.jsoup.Jsoup;
 import org.reflections.Reflections;
 import org.springframework.http.HttpStatus;
 
@@ -62,6 +69,13 @@ import lombok.extern.log4j.Log4j2;
 public class RssFeedHandler implements RequestHandler<ServerlessInput, ServerlessOutput> {
   HttpResponse<InputStream> mockRsp;
   private static JAXBContext CTX;
+  private ObjectMapper mapper;
+
+  public RssFeedHandler() {
+    mapper = new ObjectMapper();
+    mapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+    mapper.setDateFormat(new ISO8601DateFormat());
+  }
 
   @Override
   public ServerlessOutput handleRequest(ServerlessInput input, Context context) {
@@ -69,13 +83,10 @@ public class RssFeedHandler implements RequestHandler<ServerlessInput, Serverles
       return ServerlessOutput.builder().statusCode(HttpStatus.UNAUTHORIZED.value()).build();
     }
     String userId = context.getIdentity().getIdentityId();
-    ObjectMapper mapper = new ObjectMapper();
-    mapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
-    mapper.setDateFormat(new ISO8601DateFormat());
 
     try {
       FeedForm form = mapper.readValue(input.getBody(), FeedForm.class);
-      Optional<ChannelUrl> url = Optional.of(new ChannelUrl(form.getFeedUrl()));
+      Optional<ChannelUrl> url = transformChannelUrl(form.getFeedUrl());
       log.info("RawUrl={}", form.getFeedUrl());
       log.info("Url={}", url.get().getUrl());
 
@@ -170,6 +181,34 @@ public class RssFeedHandler implements RequestHandler<ServerlessInput, Serverles
       log.debug("StatusCode={}, Headers={{}}", rsp.getStatus(), headers);
     }
     return rsp;
+  }
+
+  Optional<ChannelUrl> transformChannelUrl(String url) throws URISyntaxException, IOException {
+    URI uri = ChannelUrl.normalizeUri(url);
+    Matcher match;
+    switch (uri.getHost()) {
+      case "soundcloud.com":
+        String htmlElement =
+            Jsoup.connect(url).get().select("[content^=soundcloud://users:]").first().toString();
+        match = Pattern.compile("soundcloud://users:(\\d+)").matcher(htmlElement);
+        if (match.find()) {
+          return Optional.of(new ChannelUrl(String.format(
+              "http://feeds.soundcloud.com/users/soundcloud:users:%s/sounds.rss", match.group(1))));
+        }
+        break;
+      case "itunes.apple.com":
+        match = Pattern.compile("id(\\d+)").matcher(url);
+        if (match.find()) {
+          URL lookupUrl = new URL(String
+              .format("https://itunes.apple.com/lookup?id=%s&entity=podcast", match.group(1)));
+          return Optional
+              .of(new ChannelUrl(mapper.readTree(lookupUrl).at("/results/0/feedUrl").asText()));
+        }
+        break;
+      default:
+        return Optional.of(new ChannelUrl(url));
+    }
+    return Optional.of(new ChannelUrl(url));
   }
 
   public static void main(String[] args) {
