@@ -37,6 +37,7 @@
 							<goal>shade</goal>
 						</goals>
 						<configuration>
+							<outputDirectory>${project.build.directory}/shaded</outputDirectory>
 							<artifactSet>
 								<excludes>
 									<exclude>com.amazonaws:aws-lambda-java-events</exclude>
