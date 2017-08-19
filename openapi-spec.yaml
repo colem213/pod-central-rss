@@ -1,0 +1,120 @@
+swagger: '2.0'
+info:
+  version: '1.0'
+  title:
+    Fn::Sub: '${WebAppStackName} RSS Feed Subscription API'
+basePath:
+  Fn::Sub: '/${WebAppStackName}'
+schemes:
+  - 'https'
+paths:
+  /subscribe:
+    post:
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - name: input
+          in: body
+          description: RSS Feed Url to subsribe to
+          required: true
+          schema:
+            type: object
+            properties:
+              feedUrl:
+                type: string
+      responses:
+        201:
+          description: Successfully created a RSS Feed subscription
+          schema:
+            title: Channel ID
+            type: object
+            properties:
+              channelId:
+                type: string
+          headers:
+            Access-Control-Allow-Headers:
+              type: string
+            Access-Control-Allow-Methods:
+              type: string
+            Access-Control-Allow-Origin:
+              type: string
+          x-amazon-apigateway-integration:
+            responses:
+              default:
+                statusCode: 200
+                responseParameters:
+                  method.response.header.Access-Control-Allow-Headers : "'Content-Type,X-Amz-Date,Authorization,X-Api-Key'"
+                  method.response.header.Access-Control-Allow-Methods : "'*'"
+                  method.response.header.Access-Control-Allow-Origin : "'*'"
+        400:
+          description: Failed to create RSS Feed subscription due to bad request
+          headers:
+            Access-Control-Allow-Headers:
+              type: string
+            Access-Control-Allow-Methods:
+              type: string
+            Access-Control-Allow-Origin:
+              type: string
+        500:
+          description: Failed to create RSS Feed subscription due to server error
+          headers:
+            Access-Control-Allow-Origin:
+              type: string
+      security:
+        - sigv4: []
+      x-amazon-apigateway-integration:
+        responses:
+          '2\\d{2}':
+            statusCode: 201
+            responseParameters:
+              method.response.header.Access-Control-Allow-Origin: "'*'"
+          '400':
+            statusCode: 400
+            responseParameters:
+              method.response.header.Access-Control-Allow-Origin: "'*'"
+          '500':
+            statusCode: 500
+            responseParameters:
+              method.response.header.Access-Control-Allow-Origin: "'*'"
+        uri:
+          Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${RssFeed.Arn}/invocations
+        passthroughBehavior: when_no_templates
+        httpMethod: POST
+        contentHandling: CONVERT_TO_TEXT
+        type: aws
+    options:
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      responses:
+        200:
+          description: Default response for CORS method
+          headers:
+            Access-Control-Allow-Origin:
+              type: "string"
+            Access-Control-Allow-Methods:
+              type: "string"
+            Access-Control-Allow-Headers:
+              type: "string"
+      x-amazon-apigateway-integration:
+        responses:
+          default:
+            statusCode: "200"
+            responseParameters:
+              method.response.header.Access-Control-Allow-Methods: "'POST,GET,OPTIONS'"
+              method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
+              method.response.header.Access-Control-Allow-Origin: "'*'"
+        requestTemplates:
+          application/json: |
+            {"statusCode": 200}
+        passthroughBehavior: "when_no_match"
+        type: "mock"
+securityDefinitions:
+  sigv4:
+    type: apiKey
+    name: Authorization
+    in: header
+    x-amazon-apigateway-authtype: awsSigv4

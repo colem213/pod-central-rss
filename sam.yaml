@@ -1,0 +1,73 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Simple RSS subscription service.
+Transform: AWS::Serverless-2016-10-31
+Parameters:
+  WebAppStackName:
+    Type: String
+    Description: Name of the web app stack
+Resources:
+  RssFeed:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: io.podcentral.function.RssFeedHandler::handleRequest
+      Runtime: java8
+      CodeUri: target/shaded/
+      MemorySize: 512
+      Policies: AmazonDynamoDBFullAccess
+      Environment:
+        Variables:
+          CHANNEL_TABLE: !Sub '${WebAppStackName}Channel'
+          ITEM_TABLE: !Sub '${WebAppStackName}Item'
+          SUBSCRIPTION_TABLE: !Sub '${WebAppStackName}Subscription'
+          CHANNELURL_TABLE: !Ref ChannelUrlTable
+      Events:
+        RssFeedSubscribe:
+          Type: Api
+          Properties:
+            Path: /subscribe
+            Method: post
+            RestApiId: !Ref RssFeedApi
+  RssFeedApi:
+    Type: AWS::Serverless::Api
+    Properties:
+      StageName: !Sub '${WebAppStackName}'
+      DefinitionUri: ./api.yaml
+  ChannelUrlTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub '${WebAppStackName}ChannelUrl'
+      AttributeDefinitions:
+        - AttributeName: id
+          AttributeType: S
+        - AttributeName: url
+          AttributeType: S
+      KeySchema:
+        - AttributeName: url
+          KeyType: HASH
+      GlobalSecondaryIndexes:
+        - IndexName: ChannelIndex
+          KeySchema:
+            - AttributeName: id
+              KeyType: HASH
+          Projection:
+            ProjectionType: KEYS_ONLY
+          ProvisionedThroughput:
+            ReadCapacityUnits: 1
+            WriteCapacityUnits: 1
+      ProvisionedThroughput:
+        ReadCapacityUnits: 1
+        WriteCapacityUnits: 1
+  RssFeedLambdaPolicy:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyName: !Sub '${AWS::StackName}RssFeedLambdaPolicy'
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Action: 'lambda:InvokeFunction'
+            Resource: !GetAtt RssFeed.Arn
+      Roles:
+        - Fn::ImportValue:
+            !Sub '${WebAppStackName}AuthWebRole'
+        
