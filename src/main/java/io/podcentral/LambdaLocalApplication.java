@@ -3,7 +3,6 @@ package io.podcentral;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -19,17 +18,13 @@ import com.amazonaws.services.lambda.runtime.LambdaLogger;
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.interfaces.DecodedJWT;
 
-import io.podcentral.function.RssFeedHandler;
-import io.podcentral.model.ServerlessInput;
-import io.podcentral.model.ServerlessOutput;
-
 @Controller
 @SpringBootApplication
 public class LambdaLocalApplication {
   @Value("${userId}")
   private String userId;
 
-  RssFeedHandler handler = new RssFeedHandler();
+  // RssFeedHandler handler = new RssFeedHandler();
 
   public static void main(String[] args) {
     SpringApplication.run(LambdaLocalApplication.class, args);
@@ -45,11 +40,11 @@ public class LambdaLocalApplication {
       DecodedJWT jwt = JWT.decode(auth.split(" ")[1]);
       userId = jwt.getSubject();
     }
-    ServerlessInput input = new ServerlessInput();
-    input.setBody(body);
-    ServerlessOutput output = handler.handleRequest(input, new DefaultContext());
+    // ServerlessInput input = new ServerlessInput();
+    // input.setBody(body);
+    // ServerlessOutput output = handler.handleRequest(input, new DefaultContext());
 
-    return new ResponseEntity<String>(output.getBody(), HttpStatus.valueOf(output.getStatusCode()));
+    return null;
   }
 
   class DefaultContext implements Context {

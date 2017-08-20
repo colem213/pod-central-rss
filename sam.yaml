@@ -11,9 +11,20 @@ Resources:
     Properties:
       Handler: io.podcentral.function.RssFeedHandler::handleRequest
       Runtime: java8
-      CodeUri: target/shaded/
-      MemorySize: 512
-      Policies: AmazonDynamoDBFullAccess
+      CodeUri: target/rss-lambda.jar
+      MemorySize: 1024
+      Timeout: 15
+      Policies:
+        - AWSLambdaBasicExecutionRole
+        - Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Action: 'dynamodb:*'
+              Resource:
+                - !Sub 'arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${WebAppStackName}Channel*'
+                - !Sub 'arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${WebAppStackName}ChannelUrl*'
+                - !Sub 'arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${WebAppStackName}Item*'
+                - !Sub 'arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${WebAppStackName}Subscription*'
       Environment:
         Variables:
           CHANNEL_TABLE: !Sub '${WebAppStackName}Channel'
@@ -27,11 +38,6 @@ Resources:
             Path: /subscribe
             Method: post
             RestApiId: !Ref RssFeedApi
-  RssFeedApi:
-    Type: AWS::Serverless::Api
-    Properties:
-      StageName: !Sub '${WebAppStackName}'
-      DefinitionUri: ./api.yaml
   ChannelUrlTable:
     Type: AWS::DynamoDB::Table
     Properties:
@@ -65,9 +71,157 @@ Resources:
         Version: '2012-10-17'
         Statement:
           - Effect: Allow
+            Action: 'execute-api:Invoke'
+            Resource: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${RssFeedApi}/${WebAppStackName}/POST/subscribe
+          - Effect: Allow
             Action: 'lambda:InvokeFunction'
             Resource: !GetAtt RssFeed.Arn
       Roles:
         - Fn::ImportValue:
             !Sub '${WebAppStackName}AuthWebRole'
+  RssFeedApi:
+    Type: AWS::Serverless::Api
+    Properties:
+      StageName: !Sub '${WebAppStackName}'
+      DefinitionBody:
+        swagger: '2.0'
+        info:
+          version: '1.0'
+          title:
+            Fn::Sub: '${WebAppStackName} RSS Feed Subscription API'
+        basePath:
+          Fn::Sub: '/${WebAppStackName}'
+        schemes:
+          - 'https'
+        paths:
+          /subscribe:
+            post:
+              consumes:
+                - application/json
+              produces:
+                - application/json
+              parameters:
+                - name: feedUrl
+                  in: body
+                  description: RSS Feed Url to subsribe to
+                  schema:
+                    type: object
+                    required:
+                      - feedUrl
+                    properties:
+                      feedUrl:
+                        type: string
+              responses:
+                '201':
+                  description: Successfully created a RSS Feed subscription
+                  schema:
+                    title: ChannelId Payload
+                    type: object
+                    properties:
+                      channelId:
+                        type: string
+                  headers:
+                    Access-Control-Allow-Origin:
+                      type: string
+                '400':
+                  description: Failed to create RSS Feed subscription due to bad request
+                  schema:
+                    title: Error
+                    type: object
+                    properties:
+                      code:
+                        type: string
+                      message:
+                        type: string
+                  headers:
+                    Access-Control-Allow-Origin:
+                      type: string
+                '401':
+                  description: Unauthorized
+                  schema:
+                    title: Error
+                    type: object
+                    properties:
+                      code:
+                        type: string
+                      message:
+                        type: string
+                  headers:
+                    Access-Control-Allow-Origin:
+                      type: string
+              security:
+                - sigv4: []
+              x-amazon-apigateway-integration:
+                responses:
+                  default:
+                    statusCode: '201'
+                    responseParameters:
+                      method.response.header.Access-Control-Allow-Origin: "'*'"
+                  '.*Unauthorized.*':
+                    statusCode: '401'
+                    responseParameters:
+                      method.response.header.Access-Control-Allow-Origin: "'*'"
+                    responseTemplates:
+                      'application/json': |
+                        #set ($errorMessageObj = $util.parseJson($input.path('$.errorMessage')))
+                        {
+                          "code" : "$errorMessageObj.code",
+                          "message" : "$errorMessageObj.message"
+                        }
+                  '.*BadRequest.*':
+                    statusCode: '400'
+                    responseParameters:
+                      method.response.header.Access-Control-Allow-Origin: "'*'"
+                    responseTemplates:
+                      'application/json': |
+                        #set ($errorMessageObj = $util.parseJson($input.path('$.errorMessage')))
+                        {
+                          "code" : "$errorMessageObj.code",
+                          "message" : "$errorMessageObj.message"
+                        }
+                uri:
+                  Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${RssFeed.Arn}/invocations
+                credentials: arn:aws:iam::*:user/*
+                passthroughBehavior: 'WHEN_NO_TEMPLATES'
+                httpMethod: 'POST'
+                contentHandling: 'CONVERT_TO_TEXT'
+                type: 'AWS'
+            options:
+              consumes:
+                - application/json
+              produces:
+                - application/json
+              responses:
+                '200':
+                  description: Default response for CORS method
+                  headers:
+                    Access-Control-Allow-Origin:
+                      type: string
+                    Access-Control-Allow-Methods:
+                      type: string
+                    Access-Control-Allow-Headers:
+                      type: string
+              x-amazon-apigateway-integration:
+                responses:
+                  default:
+                    statusCode: "200"
+                    responseParameters:
+                      method.response.header.Access-Control-Allow-Methods: "'POST,GET,OPTIONS'"
+                      method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
+                      method.response.header.Access-Control-Allow-Origin: "'*'"
+                requestTemplates:
+                  application/json: |
+                    {"statusCode": 200}
+                passthroughBehavior: when_no_match
+                type: mock
+        securityDefinitions:
+          sigv4:
+            type: apiKey
+            name: Authorization
+            in: header
+            x-amazon-apigateway-authtype: awsSigv4
+Outputs:
+  feedApiUrl:
+    Description: Rss Feed API Url
+    Value: !Sub https://${RssFeedApi}.execute-api.${AWS::Region}.amazonaws.com/${WebAppStackName}
         

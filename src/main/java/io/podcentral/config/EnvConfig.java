@@ -15,10 +15,14 @@ public class EnvConfig {
 
   public static AmazonDynamoDB getDynamoDbClient() {
     String endpoint = System.getenv(DYNAMO_ENDPOINT);
+    String region = System.getenv("AWS_DEFAULT_REGION");
 
     AmazonDynamoDBClientBuilder builder = AmazonDynamoDBClientBuilder.standard();
     if (endpoint != null) {
       builder.setEndpointConfiguration(new EndpointConfiguration(endpoint, ""));
+    } else {
+      endpoint = String.format("https://dynamodb.%s.amazonaws.com", region);
+      builder.setEndpointConfiguration(new EndpointConfiguration(endpoint, region));
     }
     AmazonDynamoDB client = builder.build();
     return client;
