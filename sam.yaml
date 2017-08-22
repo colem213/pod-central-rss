@@ -94,103 +94,35 @@ Resources:
         schemes:
           - 'https'
         paths:
-          /subscribe:
-            post:
-              consumes:
-                - application/json
+          /rss/{proxy+}:
+            x-amazon-apigateway-any-method:
               produces:
                 - application/json
               parameters:
-                - name: feedUrl
-                  in: body
-                  description: RSS Feed Url to subsribe to
-                  schema:
-                    type: object
-                    required:
-                      - feedUrl
-                    properties:
-                      feedUrl:
-                        type: string
-              responses:
-                '201':
-                  description: Successfully created a RSS Feed subscription
-                  schema:
-                    title: ChannelId Payload
-                    type: object
-                    properties:
-                      channelId:
-                        type: string
-                  headers:
-                    Access-Control-Allow-Origin:
-                      type: string
-                '400':
-                  description: Failed to create RSS Feed subscription due to bad request
-                  schema:
-                    title: Error
-                    type: object
-                    properties:
-                      code:
-                        type: string
-                      message:
-                        type: string
-                  headers:
-                    Access-Control-Allow-Origin:
-                      type: string
-                '401':
-                  description: Unauthorized
-                  schema:
-                    title: Error
-                    type: object
-                    properties:
-                      code:
-                        type: string
-                      message:
-                        type: string
-                  headers:
-                    Access-Control-Allow-Origin:
-                      type: string
-              security:
-                - sigv4: []
+                - name: proxy
+                  in: path
+                  required: true
+                  type: string
+              responses: {}
+              x-amazon-apigateway-auth:
+                type: AWS_IAM
               x-amazon-apigateway-integration:
                 responses:
                   default:
-                    statusCode: '201'
-                    responseParameters:
-                      method.response.header.Access-Control-Allow-Origin: "'*'"
-                  '.*Unauthorized.*':
-                    statusCode: '401'
-                    responseParameters:
-                      method.response.header.Access-Control-Allow-Origin: "'*'"
-                    responseTemplates:
-                      'application/json': |
-                        #set ($errorMessageObj = $util.parseJson($input.path('$.errorMessage')))
-                        {
-                          "code" : "$errorMessageObj.code",
-                          "message" : "$errorMessageObj.message"
-                        }
-                  '.*BadRequest.*':
-                    statusCode: '400'
-                    responseParameters:
-                      method.response.header.Access-Control-Allow-Origin: "'*'"
-                    responseTemplates:
-                      'application/json': |
-                        #set ($errorMessageObj = $util.parseJson($input.path('$.errorMessage')))
-                        {
-                          "code" : "$errorMessageObj.code",
-                          "message" : "$errorMessageObj.message"
-                        }
+                    statusCode: '200'
                 uri:
                   Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${RssFeed.Arn}/invocations
                 credentials: arn:aws:iam::*:user/*
-                passthroughBehavior: 'WHEN_NO_TEMPLATES'
-                httpMethod: 'POST'
-                contentHandling: 'CONVERT_TO_TEXT'
-                type: 'AWS'
+                passthroughBehavior: when_no_match
+                httpMethod: POST
+                type: aws_proxy
             options:
               consumes:
                 - application/json
               produces:
                 - application/json
+              x-amazon-apigateway-auth:
+                type: AWS_IAM
               responses:
                 '200':
                   description: Default response for CORS method
@@ -214,12 +146,6 @@ Resources:
                     {"statusCode": 200}
                 passthroughBehavior: when_no_match
                 type: mock
-        securityDefinitions:
-          sigv4:
-            type: apiKey
-            name: Authorization
-            in: header
-            x-amazon-apigateway-authtype: awsSigv4
 Outputs:
   feedApiUrl:
     Description: Rss Feed API Url
