@@ -5,13 +5,10 @@
         @javax.xml.bind.annotation.XmlNs(prefix = "media", namespaceURI = XmlNs.MEDIA),
         @javax.xml.bind.annotation.XmlNs(prefix = "atom", namespaceURI = XmlNs.ATOM)},
     elementFormDefault = javax.xml.bind.annotation.XmlNsForm.UNQUALIFIED)
-@XmlAccessorType(XmlAccessType.FIELD)
 package io.podcentral.rss;
 
 import java.util.Date;
 
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlSchema;
 import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapters;
