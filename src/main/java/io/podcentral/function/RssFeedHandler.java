@@ -94,18 +94,27 @@ public class RssFeedHandler implements RequestHandler<ServerlessInput, Serverles
     if (!"post".equalsIgnoreCase(input.getHttpMethod())) {
       return INVALID_METHOD;
     }
-    if (context.getIdentity().getIdentityId().isEmpty()) {
+    if (context.getIdentity() == null || context.getIdentity().getIdentityId() == null
+        || context.getIdentity().getIdentityId().isEmpty()) {
       return UNAUTHORIZED;
     }
     String userId = context.getIdentity().getIdentityId();
 
     try {
-      String feedUrl = mapper.readTree(input.getBody()).at("/feedUrl").asText();
+      String feedUrl;
+      try {
+        feedUrl = mapper.readTree(input.getBody()).at("/feedUrl").asText();
+      } catch (IOException e) {
+        return ServerlessOutput.builder().statusCode(HttpStatus.SC_BAD_REQUEST)
+            .body(mapper.writeValueAsString(new Error("InvalidRequestBodyException",
+                "The request body is unable to be processed!")))
+            .build();
+      }
       Optional<ChannelUrl> url = transformChannelUrl(feedUrl);
       log.info("RawUrl={}", feedUrl);
       log.info("Url={}", url.get().getUrl());
 
-      DynamoDBMapper dbMapper = EnvConfig.getDynamoDbMapper();
+      DynamoDBMapper dbMapper = EnvConfig.getDynamoDbMapper(input.getStageVariables());
 
       ObjectNode channelIdNode = mapper.createObjectNode();
       Optional<ChannelUrl> dbUrl = Optional.ofNullable(dbMapper.load(url.get()));

@@ -1,0 +1,37 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Simple RSS subscription service.
+Transform: AWS::Serverless-2016-10-31
+Resources:
+  RssFeedSub:
+    Type: AWS::Serverless::Function
+    Properties:
+      Description: Pod Central Rss Feed Subscription function
+      Handler: io.podcentral.function.RssFeedHandler::handleRequest
+      Runtime: java8
+      CodeUri: target/rss-lambda.jar
+      MemorySize: 1024
+      Timeout: 15
+      Policies:
+        - AWSLambdaBasicExecutionRole
+        - Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Action:
+                - 'dynamodb:BatchGetItem'
+                - 'dynamodb:BatchWriteItem'
+                - 'dynamodb:GetItem'
+                - 'dynamodb:PutItem'
+                - 'dynamodb:Query'
+                - 'dynamodb:UpdateItem'
+              Resource:
+                - !Sub 'arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/*Channel*'
+                - !Sub 'arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/*ChannelUrl*'
+                - !Sub 'arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/*Item*'
+                - !Sub 'arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/*Subscription*'
+Outputs:
+  feedSubArn:
+    Description: Arn of RSS Feed Subscription function
+    Value: !GetAtt RssFeedSub.Arn
+    Export:
+      Name: RssFeedSubArn
+        

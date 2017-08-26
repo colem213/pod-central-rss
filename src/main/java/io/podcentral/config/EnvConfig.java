@@ -1,5 +1,8 @@
 package io.podcentral.config;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import com.amazonaws.client.builder.AwsClientBuilder.EndpointConfiguration;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClientBuilder;
@@ -29,9 +32,13 @@ public class EnvConfig {
   }
 
   public static DynamoDBMapper getDynamoDbMapper() {
+    return getDynamoDbMapper(new HashMap<String, String>(0));
+  }
+
+  public static DynamoDBMapper getDynamoDbMapper(Map<String, String> stageVariables) {
     AmazonDynamoDB client = getDynamoDbClient();
     DynamoDBMapperConfig config = new DynamoDBMapperConfig.Builder()
-        .withTableNameResolver(new EnvTableNameResolver()).build();
+        .withTableNameResolver(new EnvTableNameResolver(stageVariables)).build();
     return new DynamoDBMapper(client, config);
   }
 }
