@@ -1,0 +1,18 @@
+{
+  "StackPolicy" : {
+    "Statement" : [
+      {
+        "Effect" : "Allow",
+        "Action" : "Update:*",
+        "Principal": "*",
+        "Resource" : "*"
+      },
+      {
+        "Effect" : "Deny",
+        "NotAction" : "Update:Modify",
+        "Principal": "*",
+        "Resource" : "LogicalResourceId/RssFeedSub"
+      }
+    ]
+  }
+}

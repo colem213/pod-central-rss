@@ -1,0 +1,13 @@
+version: 0.2
+phases:
+  build:
+    commands:
+      - mvn package shade:shade@lambda -DskipTests
+  post_build:
+    commands:
+      - aws cloudformation package --template-file template.yml --s3-bucket $ARTIFACT_BUCKET --output-template-file packaged.yml
+artifacts:
+  files:
+    - packaged.yml
+    - prod-configuration.json
+  discard-paths: yes
