@@ -35,7 +35,6 @@ import com.amazonaws.services.dynamodbv2.model.ExpectedAttributeValue;
 import com.amazonaws.services.dynamodbv2.model.ProvisionedThroughput;
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -79,10 +78,6 @@ public class RssFeedHandler implements RequestHandler<ServerlessInput, Serverles
 
   @Override
   public ServerlessOutput handleRequest(ServerlessInput input, Context context) {
-    try {
-      log.info(mapper.writeValueAsString(input));
-    } catch (JsonProcessingException e) {
-    }
     switch (input.getPathParameters().getOrDefault("proxy", "")) {
       case "subscribe":
         return subscribe(input, context);

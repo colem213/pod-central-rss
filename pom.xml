@@ -43,6 +43,7 @@
 								<excludes>
 									<exclude>com.amazonaws:aws-lambda-java-events</exclude>
 									<exclude>com.amazonaws:aws-lambda-java-core</exclude>
+									<exclude>com.amazonaws:aws-java-sdk-cognitoidentity</exclude>
 									<exclude>org.projectlombok:lombok</exclude>
 									<exclude>org.springframework.boot:spring-boot-starter-web</exclude>
 									<exclude>org.springframework.boot:spring-boot-devtools</exclude>
@@ -137,6 +138,14 @@
 		<dependency>
 			<groupId>com.amazonaws</groupId>
 			<artifactId>aws-java-sdk-dynamodb</artifactId>
+		</dependency>
+		<dependency>
+		    <groupId>com.amazonaws</groupId>
+		    <artifactId>aws-java-sdk-cognitoidentity</artifactId>
+		</dependency>
+		<dependency>
+		    <groupId>com.amazonaws</groupId>
+		    <artifactId>aws-java-sdk-cloudformation</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>com.amazonaws</groupId>

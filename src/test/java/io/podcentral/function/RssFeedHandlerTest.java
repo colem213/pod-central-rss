@@ -6,6 +6,7 @@ import static org.mockito.Mockito.when;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.HashMap;
 import java.util.UUID;
 
 import org.junit.Test;
@@ -47,6 +48,7 @@ public class RssFeedHandlerTest {
     when(feedReq.asBinary()).thenReturn(rsp);
     ServerlessInput input =
         TestUtil.loadJsonFromClasspath(ServerlessInput.class, "aws-api-gateway-req.json");
+    input.setStageVariables(new HashMap<>());
 
 
     RssFeedHandler handler = new RssFeedHandler();
