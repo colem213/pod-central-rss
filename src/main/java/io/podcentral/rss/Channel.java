@@ -31,11 +31,16 @@ public class Channel {
   private String description;
   private String link;
   private Date pubDate;
+  private Date lastBuildDate;
   private String language;
+  private String copyright;
+  private Integer ttl;
   @XmlPath("itunes:image/@href")
   private String imageUrl;
+  @XmlElement(name = "category")
+  private String rssCategory;
   @XmlPath("itunes:category/@text")
-  private String category;
+  private String itunesCategory;
   @XmlElement(name = "explicit", namespace = XmlNs.ITUNES)
   private Boolean explicit;
   @DynamoDBIgnore
