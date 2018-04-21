@@ -16,6 +16,8 @@ import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBTable;
 
 import io.podcentral.config.TableConstants;
 import io.podcentral.xml.CsvAdapter;
+import io.podcentral.xml.ItunesDurationAdapter;
+import io.podcentral.xml.ItunesExplicitAdapter;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -40,8 +42,27 @@ public class Item {
   private String sourceUrl;
   @DynamoDBIndexRangeKey(globalSecondaryIndexName = TableConstants.Item.GSI_CHANNEL_INDEX)
   private Instant pubDate;
+
+  @XmlPath("itunes:author/text()")
+  private String itunesAuthor;
+  @XmlPath("itunes:block/text()")
+  private Boolean itunesBlock;
   @XmlPath("itunes:image/@href")
-  private String imageUrl;
+  private String itunesImageUrl;
+  @XmlJavaTypeAdapter(ItunesDurationAdapter.class)
+  @XmlPath("itunes:duration/text()")
+  private String itunesDuration;
+  @XmlJavaTypeAdapter(ItunesExplicitAdapter.class)
+  @XmlElement(name = "explicit", namespace = XmlNs.ITUNES)
+  private Boolean itunesExplicit;
+  @XmlElement(name = "isClosedCaptioned", namespace = XmlNs.ITUNES)
+  private Boolean itunesIsClosedCaptioned;
+  @XmlElement(name = "order", namespace = XmlNs.ITUNES)
+  private Integer itunesOrder;
+  @XmlElement(name = "subtitle", namespace = XmlNs.ITUNES)
+  private String itunesSubtitle;
+  @XmlElement(name = "summary", namespace = XmlNs.ITUNES)
+  private String itunesSummary;
   @XmlElement(name = "content", namespace = XmlNs.MEDIA)
   private List<MediaContent> media;
   @XmlJavaTypeAdapter(CsvAdapter.class)

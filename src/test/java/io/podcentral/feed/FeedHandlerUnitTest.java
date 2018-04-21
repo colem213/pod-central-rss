@@ -49,6 +49,26 @@ public class FeedHandlerUnitTest {
   }
 
   @Test
+  public void shouldParseSupportedItunesRssChannelFields() {
+    InputStream xmlInput = getClass().getResourceAsStream("/rss/sample-rss.xml");
+    RssFeed rss = FeedHandler.parseRss(xmlInput);
+
+    Channel ch = rss.getChannel();
+    assertEquals("ITunes Author", ch.getItunesAuthor());
+    assertTrue(ch.getItunesBlock());
+    assertEquals("Technology", ch.getItunesCategory().getText());
+    assertEquals("Gadgets", ch.getItunesCategory().getSubCategory());
+    assertEquals("http://example.com/podcasts/everything/AllAboutEverything.jpg",
+        ch.getItunesImageUrl());
+    assertTrue(ch.getItunesExplicit());
+    assertTrue(ch.getItunesIsComplete());
+    assertEquals("itunes@owner.email", ch.getItunesOwnerEmail());
+    assertEquals("ITunes Owner", ch.getItunesOwnerName());
+    assertEquals("Userland", ch.getItunesSubtitle());
+    assertEquals("Channel Summary", ch.getItunesSummary());
+  }
+
+  @Test
   public void shouldParseSupportedRssItemFields() throws Exception {
     InputStream xmlInput = getClass().getResourceAsStream("/rss/sample-rss.xml");
     RssFeed rss = FeedHandler.parseRss(xmlInput);
@@ -70,5 +90,22 @@ public class FeedHandlerUnitTest {
     assertEquals(new RssDateTimeAdapter().unmarshal("Mon, 30 Sep 2002 01:56:02 GMT"),
         item.getPubDate());
     assertEquals("http://scriptingnews.userland.com/.rss", item.getSourceUrl());
+  }
+
+  @Test
+  public void shouldParseSupportedItunesRssItemFields() {
+    InputStream xmlInput = getClass().getResourceAsStream("/rss/sample-rss.xml");
+    RssFeed rss = FeedHandler.parseRss(xmlInput);
+
+    Item item = rss.getChannel().getItems().get(0);
+    assertEquals("ITunes Item Author", item.getItunesAuthor());
+    assertTrue(item.getItunesBlock());
+    assertEquals("http://example.com/podcasts/everything/AllAboutEverything/Episode1.jpg",
+        item.getItunesImageUrl());
+    assertEquals("07:04", item.getItunesDuration());
+    assertTrue(item.getItunesExplicit());
+    assertTrue(item.getItunesIsClosedCaptioned());
+    assertEquals(1, (int) item.getItunesOrder());
+    assertEquals("Item Summary", item.getItunesSummary());
   }
 }

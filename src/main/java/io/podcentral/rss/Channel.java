@@ -4,6 +4,7 @@ import java.time.Instant;
 import java.util.List;
 
 import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
 import org.eclipse.persistence.oxm.annotations.XmlPath;
 
@@ -13,6 +14,7 @@ import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBIgnore;
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBTable;
 
 import io.podcentral.config.TableConstants;
+import io.podcentral.xml.ItunesExplicitAdapter;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
@@ -41,15 +43,33 @@ public class Channel {
   private String rssImageTitle;
   @XmlPath("image/link/text()")
   private String rssImageLink;
-  @XmlPath("itunes:image/@href")
-  private String itunesImageUrl;
   @XmlElement(name = "category")
   private String rssCategory;
-  @XmlPath("itunes:category/@text")
-  private String itunesCategory;
+
+  @XmlPath("itunes:author/text()")
+  private String itunesAuthor;
+  @XmlPath("itunes:block/text()")
+  private Boolean itunesBlock;
+  @XmlPath("itunes:image/@href")
+  private String itunesImageUrl;
+  @XmlPath("itunes:category[1]")
+  private ItunesCategory itunesCategory;
+  @XmlJavaTypeAdapter(ItunesExplicitAdapter.class)
   @XmlElement(name = "explicit", namespace = XmlNs.ITUNES)
-  private Boolean explicit;
+  private Boolean itunesExplicit;
+  @XmlElement(name = "complete", namespace = XmlNs.ITUNES)
+  private Boolean itunesIsComplete;
+  @XmlPath("itunes:owner/itunes:email/text()")
+  private String itunesOwnerEmail;
+  @XmlPath("itunes:owner/itunes:name/text()")
+  private String itunesOwnerName;
+  @XmlElement(name = "subtitle", namespace = XmlNs.ITUNES)
+  private String itunesSubtitle;
+  @XmlElement(name = "summary", namespace = XmlNs.ITUNES)
+  private String itunesSummary;
+
   @DynamoDBIgnore
   @XmlElement(name = "item")
   private List<Item> items;
+
 }
