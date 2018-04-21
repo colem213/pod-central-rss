@@ -14,6 +14,13 @@
 		<managingEditor>dave@userland.com</managingEditor>
 		<webMaster>dave@userland.com</webMaster>
 		<ttl>40</ttl>
+		<image>
+			<url>http://chexed.com/images/chexed.gif</url>
+			<width>110</width>
+			<height>38</height>
+			<title>Chexed.com</title>
+			<link>http://www.chexed.com/</link>
+		</image>
 		<item>
 			<description><![CDATA[
 				"rssflowersalignright"With any luck we should have one or two more

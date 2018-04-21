@@ -35,8 +35,14 @@ public class Channel {
   private String language;
   private String copyright;
   private Integer ttl;
+  @XmlPath("image/url/text()")
+  private String rssImageUrl;
+  @XmlPath("image/title/text()")
+  private String rssImageTitle;
+  @XmlPath("image/link/text()")
+  private String rssImageLink;
   @XmlPath("itunes:image/@href")
-  private String imageUrl;
+  private String itunesImageUrl;
   @XmlElement(name = "category")
   private String rssCategory;
   @XmlPath("itunes:category/@text")

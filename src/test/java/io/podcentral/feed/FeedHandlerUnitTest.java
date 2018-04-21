@@ -38,6 +38,9 @@ public class FeedHandlerUnitTest {
         ch.getLastBuildDate());
     assertEquals("1765", ch.getRssCategory());
     assertEquals(40, (int) ch.getTtl());
+    assertEquals("http://chexed.com/images/chexed.gif", ch.getRssImageUrl());
+    assertEquals("Chexed.com", ch.getRssImageTitle());
+    assertEquals("http://www.chexed.com/", ch.getRssImageLink());
     // assertEquals("Scripting News", ch.getSkipHours());
     // assertEquals("Scripting News", ch.getSkipDays());
   }
