@@ -22,6 +22,7 @@
 			<link>http://www.chexed.com/</link>
 		</image>
 		<item>
+			<title>Scripting News</title>
 			<description><![CDATA[
 				"rssflowersalignright"With any luck we should have one or two more
 				days of namespaces stuff here on Scripting News. It feels like it's
@@ -38,9 +39,21 @@
 				be ready to move forward shortly.
 			]]></description>
 			<pubDate>Mon, 30 Sep 2002 01:56:02 GMT</pubDate>
+			<author>Dave Winer</author>
+			<category>Tech</category>
+			<enclosure url="http://www.scripting.com/mp3s/weatherReportSuite.mp3" length="12216320" type="audio/mpeg" />
+			<comments>
+				http://scriptingnews.userland.com/backissues/2002/09/29#When:6:56:02PM/comments
+			</comments>
 			<guid>
 				http://scriptingnews.userland.com/backissues/2002/09/29#When:6:56:02PM
 			</guid>
+			<link>
+				http://scriptingnews.userland.com/
+			</link>
+			<source url="http://scriptingnews.userland.com/.rss">
+      			scripting.com:Learn 2 script noob
+      		</source>
 		</item>
 		<item>
 			<description><![CDATA[

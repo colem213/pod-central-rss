@@ -1,5 +1,6 @@
 @XmlJavaTypeAdapters({@XmlJavaTypeAdapter(value = RssDateTimeAdapter.class, type = Instant.class),
-    @XmlJavaTypeAdapter(value = BoolAdapter.class, type = Boolean.class)})
+    @XmlJavaTypeAdapter(value = BoolAdapter.class, type = Boolean.class),
+    @XmlJavaTypeAdapter(value = StringAdapter.class, type = String.class)})
 @XmlSchema(
     xmlns = {@javax.xml.bind.annotation.XmlNs(prefix = "itunes", namespaceURI = XmlNs.ITUNES),
         @javax.xml.bind.annotation.XmlNs(prefix = "media", namespaceURI = XmlNs.MEDIA),
@@ -15,3 +16,4 @@ import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapters;
 
 import io.podcentral.xml.BoolAdapter;
 import io.podcentral.xml.RssDateTimeAdapter;
+import io.podcentral.xml.StringAdapter;

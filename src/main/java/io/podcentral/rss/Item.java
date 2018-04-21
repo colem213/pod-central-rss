@@ -1,10 +1,9 @@
 package io.podcentral.rss;
 
-import java.util.Date;
+import java.time.Instant;
 import java.util.List;
 
 import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlElements;
 import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
 import org.eclipse.persistence.oxm.annotations.XmlPath;
@@ -31,13 +30,19 @@ public class Item {
   private String channelId;
   private String title;
   private String link;
+  private String description;
+  private String author;
+  private String category;
+  private String comments;
+  private MediaContent enclosure;
+  private String guid;
+  @XmlPath("source/@url/text()")
+  private String sourceUrl;
+  @DynamoDBIndexRangeKey(globalSecondaryIndexName = TableConstants.Item.GSI_CHANNEL_INDEX)
+  private Instant pubDate;
   @XmlPath("itunes:image/@href")
   private String imageUrl;
-  private String description;
-  @DynamoDBIndexRangeKey(globalSecondaryIndexName = TableConstants.Item.GSI_CHANNEL_INDEX)
-  private Date pubDate;
-  @XmlElements({@XmlElement(name = "content", namespace = XmlNs.MEDIA),
-      @XmlElement(name = "enclosure")})
+  @XmlElement(name = "content", namespace = XmlNs.MEDIA)
   private List<MediaContent> media;
   @XmlJavaTypeAdapter(CsvAdapter.class)
   @XmlElement(namespace = XmlNs.MEDIA)

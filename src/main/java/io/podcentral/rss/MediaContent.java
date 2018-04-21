@@ -18,5 +18,7 @@ public class MediaContent {
   @XmlAttribute
   private String duration;
   @XmlAttribute
+  private int length;
+  @XmlAttribute
   private String lang;
 }

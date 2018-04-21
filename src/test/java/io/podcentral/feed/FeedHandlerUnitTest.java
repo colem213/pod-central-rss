@@ -1,6 +1,7 @@
 package io.podcentral.feed;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.io.InputStream;
 
@@ -9,6 +10,8 @@ import javax.xml.bind.JAXBException;
 import org.junit.Test;
 
 import io.podcentral.rss.Channel;
+import io.podcentral.rss.Item;
+import io.podcentral.rss.MediaContent;
 import io.podcentral.rss.RssFeed;
 import io.podcentral.xml.RssDateTimeAdapter;
 
@@ -43,5 +46,29 @@ public class FeedHandlerUnitTest {
     assertEquals("http://www.chexed.com/", ch.getRssImageLink());
     // assertEquals("Scripting News", ch.getSkipHours());
     // assertEquals("Scripting News", ch.getSkipDays());
+  }
+
+  @Test
+  public void shouldParseSupportedRssItemFields() throws Exception {
+    InputStream xmlInput = getClass().getResourceAsStream("/rss/sample-rss.xml");
+    RssFeed rss = FeedHandler.parseRss(xmlInput);
+
+    Item item = rss.getChannel().getItems().get(0);
+    MediaContent enclosure = item.getEnclosure();
+    assertEquals("Scripting News", item.getTitle());
+    assertEquals("http://scriptingnews.userland.com/", item.getLink());
+    assertTrue(item.getDescription() != null);
+    assertEquals("Dave Winer", item.getAuthor());
+    assertEquals("Tech", item.getCategory());
+    assertEquals("http://scriptingnews.userland.com/backissues/2002/09/29#When:6:56:02PM/comments",
+        item.getComments());
+    assertEquals("http://www.scripting.com/mp3s/weatherReportSuite.mp3", enclosure.getUrl());
+    assertEquals(12216320, enclosure.getLength());
+    assertEquals("audio/mpeg", enclosure.getType());
+    assertEquals("http://scriptingnews.userland.com/backissues/2002/09/29#When:6:56:02PM",
+        item.getGuid());
+    assertEquals(new RssDateTimeAdapter().unmarshal("Mon, 30 Sep 2002 01:56:02 GMT"),
+        item.getPubDate());
+    assertEquals("http://scriptingnews.userland.com/.rss", item.getSourceUrl());
   }
 }
