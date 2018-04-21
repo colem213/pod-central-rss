@@ -1,6 +1,6 @@
 package io.podcentral.rss;
 
-import java.util.Date;
+import java.time.Instant;
 import java.util.List;
 
 import javax.xml.bind.annotation.XmlElement;
@@ -30,8 +30,8 @@ public class Channel {
   private String title;
   private String description;
   private String link;
-  private Date pubDate;
-  private Date lastBuildDate;
+  private Instant pubDate;
+  private Instant lastBuildDate;
   private String language;
   private String copyright;
   private Integer ttl;

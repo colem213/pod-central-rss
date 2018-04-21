@@ -10,7 +10,7 @@ import org.junit.Test;
 
 import io.podcentral.rss.Channel;
 import io.podcentral.rss.RssFeed;
-import io.podcentral.xml.DateAdapter;
+import io.podcentral.xml.RssDateTimeAdapter;
 
 public class FeedHandlerUnitTest {
   @Test
@@ -32,8 +32,9 @@ public class FeedHandlerUnitTest {
     Channel ch = rss.getChannel();
     assertEquals("en-us", ch.getLanguage());
     assertEquals("Copyright 1997-2002 Dave Winer", ch.getCopyright());
-    assertEquals(new DateAdapter().unmarshal("Sun, 29 Sep 2002 00:00:00 GMT"), ch.getPubDate());
-    assertEquals(new DateAdapter().unmarshal("Mon, 30 Sep 2002 11:00:00 GMT"),
+    assertEquals(new RssDateTimeAdapter().unmarshal("Sun, 29 Sep 2002 00:00:00 GMT"),
+        ch.getPubDate());
+    assertEquals(new RssDateTimeAdapter().unmarshal("Mon, 30 Sep 2002 11:00:00 GMT"),
         ch.getLastBuildDate());
     assertEquals("1765", ch.getRssCategory());
     assertEquals(40, (int) ch.getTtl());
