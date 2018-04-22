@@ -10,7 +10,6 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -22,17 +21,12 @@ import javax.xml.bind.Unmarshaller;
 
 import org.apache.http.HttpStatus;
 import org.jsoup.Jsoup;
-import org.reflections.Reflections;
 
-import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper;
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper.FailedBatch;
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBSaveExpression;
-import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBTable;
 import com.amazonaws.services.dynamodbv2.model.ConditionalCheckFailedException;
-import com.amazonaws.services.dynamodbv2.model.CreateTableRequest;
 import com.amazonaws.services.dynamodbv2.model.ExpectedAttributeValue;
-import com.amazonaws.services.dynamodbv2.model.ProvisionedThroughput;
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -218,21 +212,21 @@ public class RssFeedHandler implements RequestHandler<ServerlessInput, Serverles
     return Optional.of(new ChannelUrl(url));
   }
 
-  public static void main(String[] args) {
-    DynamoDBMapper mapper = EnvConfig.getDynamoDbMapper();
-    AmazonDynamoDB client = EnvConfig.getDynamoDbClient();
-
-    Reflections reflections = new Reflections("io.podcentral");
-    Set<Class<?>> annotated = reflections.getTypesAnnotatedWith(DynamoDBTable.class);
-
-    ProvisionedThroughput thruPut = new ProvisionedThroughput(3L, 3L);
-    for (Class<?> table : annotated) {
-      CreateTableRequest tableReq = mapper.generateCreateTableRequest(table);
-      tableReq.setProvisionedThroughput(thruPut);
-      if (tableReq.getGlobalSecondaryIndexes() != null) {
-        tableReq.getGlobalSecondaryIndexes().forEach(idx -> idx.setProvisionedThroughput(thruPut));
-      }
-      client.createTable(tableReq);
-    }
-  }
+  // public static void main(String[] args) {
+  // DynamoDBMapper mapper = EnvConfig.getDynamoDbMapper();
+  // AmazonDynamoDB client = EnvConfig.getDynamoDbClient();
+  //
+  // Reflections reflections = new Reflections("io.podcentral");
+  // Set<Class<?>> annotated = reflections.getTypesAnnotatedWith(DynamoDBTable.class);
+  //
+  // ProvisionedThroughput thruPut = new ProvisionedThroughput(3L, 3L);
+  // for (Class<?> table : annotated) {
+  // CreateTableRequest tableReq = mapper.generateCreateTableRequest(table);
+  // tableReq.setProvisionedThroughput(thruPut);
+  // if (tableReq.getGlobalSecondaryIndexes() != null) {
+  // tableReq.getGlobalSecondaryIndexes().forEach(idx -> idx.setProvisionedThroughput(thruPut));
+  // }
+  // client.createTable(tableReq);
+  // }
+  // }
 }
