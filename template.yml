@@ -6,7 +6,7 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       Description: Pod Central Rss Feed Subscription function
-      Handler: io.podcentral.function.RssFeedHandler::handleRequest
+      Handler: io.podcentral.apigw.ApiProxyController::handleRequest
       Runtime: java8
       CodeUri: target/rss-lambda.jar
       MemorySize: 1024

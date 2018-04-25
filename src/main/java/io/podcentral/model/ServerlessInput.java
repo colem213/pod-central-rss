@@ -1,5 +1,6 @@
 package io.podcentral.model;
 
+import java.util.HashMap;
 import java.util.Map;
 
 import lombok.AllArgsConstructor;
@@ -22,7 +23,7 @@ public class ServerlessInput {
   @Singular
   private Map<String, String> pathParameters;
   @Singular
-  private Map<String, String> stageVariables;
+  private Map<String, String> stageVariables = new HashMap<>();
   private String body;
   private RequestContext requestContext;
   private Boolean isBase64Encoded;

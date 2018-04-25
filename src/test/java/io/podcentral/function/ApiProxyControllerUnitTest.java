@@ -9,7 +9,7 @@ import com.amazonaws.services.lambda.runtime.CognitoIdentity;
 import com.amazonaws.services.lambda.runtime.Context;
 import com.mashape.unirest.http.HttpResponse;
 
-public class RssFeedHandlerTest {
+public class ApiProxyControllerUnitTest {
   @Mock
   HttpResponse<InputStream> rsp;
 
@@ -36,7 +36,7 @@ public class RssFeedHandlerTest {
   // input.setStageVariables(new HashMap<>());
   //
   //
-  // RssFeedHandler handler = new RssFeedHandler();
+  // ApiProxyController handler = new ApiProxyController();
   // handler.mockRsp = rsp;
   // ServerlessOutput out = handler.handleRequest(input, ctx);
   //

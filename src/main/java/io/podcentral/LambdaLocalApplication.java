@@ -17,7 +17,7 @@ import com.amazonaws.services.lambda.runtime.CognitoIdentity;
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.LambdaLogger;
 
-import io.podcentral.function.RssFeedHandler;
+import io.podcentral.apigw.ApiProxyController;
 import io.podcentral.model.ServerlessInput;
 import io.podcentral.model.ServerlessOutput;
 
@@ -27,7 +27,7 @@ public class LambdaLocalApplication {
   @Value("${userId}")
   private String userId;
 
-  RssFeedHandler handler = new RssFeedHandler();
+  ApiProxyController handler = new ApiProxyController();
 
   public static void main(String[] args) {
     SpringApplication.run(LambdaLocalApplication.class, args);

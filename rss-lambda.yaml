@@ -14,7 +14,7 @@ Resources:
     Properties:
       CodeUri: s3://colem213-rss-lambda/f7c2742611651fbcbfa0e4c5c17b27c4
       Description: Pod Central Rss Feed Subscription function
-      Handler: io.podcentral.function.RssFeedHandler::handleRequest
+      Handler: io.podcentral.apigw.ApiProxyController::handleRequest
       MemorySize: 1024
       Policies:
       - AWSLambdaBasicExecutionRole
