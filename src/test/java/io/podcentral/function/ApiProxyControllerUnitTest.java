@@ -1,18 +1,13 @@
 package io.podcentral.function;
 
-import java.io.InputStream;
 import java.util.UUID;
 
 import org.mockito.Mock;
 
 import com.amazonaws.services.lambda.runtime.CognitoIdentity;
 import com.amazonaws.services.lambda.runtime.Context;
-import com.mashape.unirest.http.HttpResponse;
 
 public class ApiProxyControllerUnitTest {
-  @Mock
-  HttpResponse<InputStream> rsp;
-
   @Mock
   Context ctx;
 

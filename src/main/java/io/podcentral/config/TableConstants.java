@@ -1,15 +1,16 @@
 package io.podcentral.config;
 
 public class TableConstants {
-  public static class Channel {
-    public static final String TABLE_NAME = "Channel";
+  public static class Feed {
+    public static final String TABLE_NAME = "Feed";
+    public static final String GSI_URI_INDEX = "UriIndex";
   }
-  public static class Item {
-    public static final String TABLE_NAME = "Item";
-    public static final String GSI_CHANNEL_INDEX = "ChannelIndex";
+  public static class Entry {
+    public static final String TABLE_NAME = "Entry";
+    public static final String GSI_FEED_INDEX = "FeedIndex";
   }
-  public static class Subscription {
-    public static final String TABLE_NAME = "Subscription";
+  public static class UserFeed {
+    public static final String TABLE_NAME = "UserFeed";
     public static final String LSI_DATE_INDEX = "SubDateIndex";
   }
   public static class ChannelUrl {

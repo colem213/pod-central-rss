@@ -15,7 +15,7 @@ public class RssDateTimeAdapter extends XmlAdapter<String, Instant> {
 
   @Override
   public Instant unmarshal(String val) throws Exception {
-    return DateTimeFormatter.ofPattern("EEE, dd MMM [yyyy][yy] HH:mm:ss z")
+    return DateTimeFormatter.ofPattern("EEE, dd MMM [yyyy][yy] HH:mm:ss [Z][z]")
         .withZone(ZoneId.of("UTC")).parse(val, Instant::from);
   }
 }

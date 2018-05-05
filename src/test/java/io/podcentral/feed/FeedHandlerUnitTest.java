@@ -1,7 +1,6 @@
 package io.podcentral.feed;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 import java.io.InputStream;
 
@@ -65,7 +64,7 @@ public class FeedHandlerUnitTest {
     assertEquals("itunes@owner.email", ch.getItunesOwnerEmail());
     assertEquals("ITunes Owner", ch.getItunesOwnerName());
     assertEquals("Userland", ch.getItunesSubtitle());
-    assertEquals("Channel Summary", ch.getItunesSummary());
+    assertEquals("Feed Summary", ch.getItunesSummary());
   }
 
   @Test
@@ -73,7 +72,7 @@ public class FeedHandlerUnitTest {
     InputStream xmlInput = getClass().getResourceAsStream("/rss/sample-rss.xml");
     RssFeed rss = FeedHandler.parseRss(xmlInput);
 
-    Item item = rss.getChannel().getItems().get(0);
+    Item item = rss.getChannel().getEntries().get(0);
     MediaContent enclosure = item.getEnclosure();
     assertEquals("Scripting News", item.getTitle());
     assertEquals("http://scriptingnews.userland.com/", item.getLink());
@@ -97,8 +96,8 @@ public class FeedHandlerUnitTest {
     InputStream xmlInput = getClass().getResourceAsStream("/rss/sample-rss.xml");
     RssFeed rss = FeedHandler.parseRss(xmlInput);
 
-    Item item = rss.getChannel().getItems().get(0);
-    assertEquals("ITunes Item Author", item.getItunesAuthor());
+    Item item = rss.getChannel().getEntries().get(0);
+    assertEquals("ITunes Entry Author", item.getItunesAuthor());
     assertTrue(item.getItunesBlock());
     assertEquals("http://example.com/podcasts/everything/AllAboutEverything/Episode1.jpg",
         item.getItunesImageUrl());
@@ -106,6 +105,6 @@ public class FeedHandlerUnitTest {
     assertTrue(item.getItunesExplicit());
     assertTrue(item.getItunesIsClosedCaptioned());
     assertEquals(1, (int) item.getItunesOrder());
-    assertEquals("Item Summary", item.getItunesSummary());
+    assertEquals("Entry Summary", item.getItunesSummary());
   }
 }

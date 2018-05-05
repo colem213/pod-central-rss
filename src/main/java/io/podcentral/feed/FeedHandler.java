@@ -1,5 +1,6 @@
 package io.podcentral.feed;
 
+import java.io.IOException;
 import java.io.InputStream;
 
 import javax.xml.bind.JAXBContext;
@@ -33,6 +34,12 @@ public class FeedHandler {
           .unmarshal(new StreamSource(xmlInput), RssFeed.class).getValue();
     } catch (JAXBException e) {
       throw new RssParseException(e);
+    } finally {
+      try {
+        xmlInput.close();
+      } catch (IOException e) {
+        throw new RuntimeException(e);
+      }
     }
   }
 

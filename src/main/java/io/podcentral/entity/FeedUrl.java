@@ -15,23 +15,23 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Data
 @DynamoDBTable(tableName = TableConstants.ChannelUrl.TABLE_NAME)
-public class ChannelUrl {
+public class FeedUrl {
   @DynamoDBHashKey
   private String url;
   @DynamoDBIndexHashKey(globalSecondaryIndexName = TableConstants.ChannelUrl.GSI_CHANNEL_INDEX)
   private String id;
 
-  public ChannelUrl(String url) throws MalformedURLException, URISyntaxException {
+  public FeedUrl(String url) throws MalformedURLException, URISyntaxException {
     setUrl(url);
   }
 
-  public ChannelUrl(String url, String channelId) throws MalformedURLException, URISyntaxException {
+  public FeedUrl(String url, String feedId) throws MalformedURLException, URISyntaxException {
     setUrl(url);
-    this.id = channelId;
+    this.id = feedId;
   }
 
   public void setUrl(String url) throws MalformedURLException, URISyntaxException {
-    this.url = ChannelUrl.normalizeUrl(url);
+    this.url = FeedUrl.normalizeUrl(url);
   }
 
   public static URI normalizeUri(String url) throws URISyntaxException, MalformedURLException {
