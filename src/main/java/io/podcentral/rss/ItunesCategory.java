@@ -6,15 +6,27 @@ import javax.xml.bind.annotation.XmlAttribute;
 
 import org.eclipse.persistence.oxm.annotations.XmlPath;
 
-import lombok.Data;
+import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBAttribute;
+import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBDocument;
 
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
+
+@DynamoDBDocument
+@NoArgsConstructor
+@RequiredArgsConstructor
 @Data
 public class ItunesCategory {
-  @XmlAttribute
-  private String text;
+  @NonNull
+  @XmlAttribute(name = "text")
+  private String name;
 
+  @DynamoDBAttribute(attributeName = "subCategory")
   public String getSubCategory() {
-    return getSubCategories().isEmpty() ? null : getSubCategories().get(0).getText();
+    return getSubCategories() == null || getSubCategories().isEmpty() ? null
+        : getSubCategories().get(0).getName();
   }
 
   @XmlPath("itunes:category")

@@ -23,7 +23,7 @@ public class FeedHandlerUnitTest {
     Channel ch = rss.getChannel();
     assertEquals("Scripting News", ch.getTitle());
     assertEquals("http://www.scripting.com/", ch.getLink());
-    assertEquals("A weblog about scripting and stuff like that.", ch.getDescription());
+    assertEquals("A weblog about scripting and stuff like that.", ch.getRssDescription());
   }
 
   @Test
@@ -55,7 +55,7 @@ public class FeedHandlerUnitTest {
     Channel ch = rss.getChannel();
     assertEquals("ITunes Author", ch.getItunesAuthor());
     assertTrue(ch.getItunesBlock());
-    assertEquals("Technology", ch.getItunesCategory().getText());
+    assertEquals("Technology", ch.getItunesCategory().getName());
     assertEquals("Gadgets", ch.getItunesCategory().getSubCategory());
     assertEquals("http://example.com/podcasts/everything/AllAboutEverything.jpg",
         ch.getItunesImageUrl());
@@ -77,7 +77,7 @@ public class FeedHandlerUnitTest {
     assertEquals("Scripting News", item.getTitle());
     assertEquals("http://scriptingnews.userland.com/", item.getLink());
     assertTrue(item.getDescription() != null);
-    assertEquals("Dave Winer", item.getAuthor());
+    assertEquals("Dave Winer", item.getRssAuthor());
     assertEquals("Tech", item.getCategory());
     assertEquals("http://scriptingnews.userland.com/backissues/2002/09/29#When:6:56:02PM/comments",
         item.getComments());

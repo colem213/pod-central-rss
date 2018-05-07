@@ -28,7 +28,15 @@ import lombok.extern.log4j.Log4j2;
 @Log4j2
 public class ApiProxyController implements RequestHandler<ServerlessInput, ServerlessOutput> {
   private static JAXBContext CTX;
-  private final DefaultPicoContainer container = DepInjectionConfig.defaultConfig();
+  private final DefaultPicoContainer container;
+
+  public ApiProxyController() {
+    this(DepInjectionConfig.defaultConfig());
+  }
+
+  public ApiProxyController(DefaultPicoContainer container) {
+    this.container = container;
+  }
 
   @Override
   public ServerlessOutput handleRequest(ServerlessInput input, Context context) {
@@ -72,22 +80,4 @@ public class ApiProxyController implements RequestHandler<ServerlessInput, Serve
     }
     return Optional.of(new FeedUrl(url));
   }
-
-  // public static void main(String[] args) {
-  // DynamoDBMapper mapper = EnvConfig.getDynamoDbMapper();
-  // AmazonDynamoDB client = EnvConfig.getDynamoDbClient();
-  //
-  // Reflections reflections = new Reflections("io.podcentral");
-  // Set<Class<?>> annotated = reflections.getTypesAnnotatedWith(DynamoDBTable.class);
-  //
-  // ProvisionedThroughput thruPut = new ProvisionedThroughput(3L, 3L);
-  // for (Class<?> table : annotated) {
-  // CreateTableRequest tableReq = mapper.generateCreateTableRequest(table);
-  // tableReq.setProvisionedThroughput(thruPut);
-  // if (tableReq.getGlobalSecondaryIndexes() != null) {
-  // tableReq.getGlobalSecondaryIndexes().forEach(idx -> idx.setProvisionedThroughput(thruPut));
-  // }
-  // client.createTable(tableReq);
-  // }
-  // }
 }

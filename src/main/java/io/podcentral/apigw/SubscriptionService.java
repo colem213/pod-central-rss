@@ -87,7 +87,7 @@ public class SubscriptionService {
                   .map(rss -> rss.getChannel()).map(this::save).map(feed -> feed.getId());
           });
         }).sequential().blockingSubscribe(feeds::add, log::error);
-    return out.build();
+    return out.body(feeds).build();
   }
 
   public Optional<String> findFeedByUri(String url) {

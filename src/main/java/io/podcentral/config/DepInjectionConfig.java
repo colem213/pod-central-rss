@@ -1,7 +1,9 @@
 package io.podcentral.config;
 
-import static org.picocontainer.Characteristics.CACHE;
+import static org.picocontainer.Characteristics.*;
 
+import java.net.URI;
+import java.time.Instant;
 import java.util.Map;
 
 import org.picocontainer.DefaultPicoContainer;
@@ -12,15 +14,17 @@ import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClientBuilder;
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper;
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapperConfig;
+import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBTypeConverterFactory;
 import com.amazonaws.services.dynamodbv2.document.DynamoDB;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
 
+import io.podcentral.aws.InstantConverter;
+import io.podcentral.aws.UriConverter;
 import io.podcentral.model.ServerlessOutput.ServerlessOutputBuilder;
 
 public class DepInjectionConfig {
-  public static final String DYNAMO_ENDPOINT = "DYNAMO_ENDPOINT";
 
   public static DefaultPicoContainer defaultConfig() {
     ObjectMapper mapper = new ObjectMapper();
@@ -39,15 +43,13 @@ public class DepInjectionConfig {
   }
 
   public static AmazonDynamoDB getDynamoDbClient() {
-    String endpoint = System.getenv(DYNAMO_ENDPOINT);
-    String region = System.getenv("AWS_DEFAULT_REGION");
+    return getDynamoDbClient(null);
+  }
 
+  public static AmazonDynamoDB getDynamoDbClient(String endpoint) {
     AmazonDynamoDBClientBuilder builder = AmazonDynamoDBClientBuilder.standard();
     if (endpoint != null) {
       builder.setEndpointConfiguration(new EndpointConfiguration(endpoint, ""));
-    } else {
-      endpoint = String.format("https://dynamodb.%s.amazonaws.com", region);
-      builder.setEndpointConfiguration(new EndpointConfiguration(endpoint, region));
     }
     return builder.build();
   }
@@ -55,7 +57,11 @@ public class DepInjectionConfig {
   public static DynamoDBMapper getDynamoDbMapper(AmazonDynamoDB client,
       Map<String, String> stageVariables) {
     DynamoDBMapperConfig config = new DynamoDBMapperConfig.Builder()
-        .withTableNameResolver(new EnvTableNameResolver(stageVariables)).build();
+        .withTableNameResolver(new EnvTableNameResolver(stageVariables))
+        .withTypeConverterFactory(DynamoDBTypeConverterFactory.standard().override()
+            .with(String.class, Instant.class, new InstantConverter())
+            .with(String.class, URI.class, new UriConverter()).build())
+        .build();
     return new DynamoDBMapper(client, config);
   }
 }
