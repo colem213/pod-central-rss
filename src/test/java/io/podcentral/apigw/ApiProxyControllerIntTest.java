@@ -2,7 +2,7 @@ package io.podcentral.apigw;
 
 import static com.amazonaws.services.dynamodbv2.xspec.ExpressionSpecBuilder.*;
 import static org.junit.Assert.*;
-import static org.mockito.Matchers.*;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 import java.io.IOException;
@@ -63,7 +63,8 @@ import io.reactivex.Maybe;
 @RunWith(PowerMockRunner.class)
 @PowerMockIgnore({"javax.management.*", "javax.xml.*", "com.sun.*", "org.eclipse.persistence.*",
     "*.ssl.*", "*.crypto.*", "io.podcentral.xml.*", "org.asynchttpclient.SslEngineFactory",
-    "org.asynchttpclient.netty.*"})
+    "org.asynchttpclient.netty.*", "org.apache.logging.log4j.*", "org.slf4j.*",
+    "org.apache.commons.logging.*"})
 public class ApiProxyControllerIntTest {
   private ObjectMapper mapper;
   private DynamoDBMapper dbMapper;
@@ -101,7 +102,7 @@ public class ApiProxyControllerIntTest {
     mockHttpResponse("GET", "", TestUtil.loadInputStreamFromClasspath("rss/sample-rss.xml"));
 
     ServerlessInput in = ServerlessInput.builder().pathParameter("proxy", "subscribe")
-        .httpMethod("post").body("[\"http://undisclosed-podcast.com\"]").build();
+        .httpMethod("post").body("{ \"feedUrl\": \"http://undisclosed-podcast.com\" }").build();
 
     ServerlessOutput out = new ApiProxyController(container).handleRequest(in, context);
 
@@ -152,14 +153,15 @@ public class ApiProxyControllerIntTest {
   void mockHttpResponse(String httpMethod, String contentType, InputStream is) {
     Response rsp = mock(Response.class);
     when(rsp.getContentType()).thenReturn(contentType);
+    when(rsp.getStatusCode()).thenReturn(200);
     if (is != null)
       when(rsp.getResponseBodyAsStream()).thenReturn(is);
     when(httpClient.prepare(argThat(new ArgumentMatcher<Request>() {
       @Override
-      public boolean matches(Object arg) {
-        if (!(arg instanceof Request))
+      public boolean matches(Request arg) {
+        if (arg == null)
           return false;
-        return ((Request) arg).getMethod().equalsIgnoreCase(httpMethod);
+        return arg.getMethod().equalsIgnoreCase(httpMethod);
       }
     }))).thenReturn(Maybe.just(rsp));
   }

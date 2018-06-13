@@ -8,7 +8,9 @@ import javax.xml.bind.JAXBException;
 import javax.xml.transform.stream.StreamSource;
 
 import io.podcentral.feed.exception.RssParseException;
+import io.podcentral.rss.Channel;
 import io.podcentral.rss.RssFeed;
+import io.reactivex.exceptions.Exceptions;
 
 public class FeedHandler {
   private static JAXBContext rssJaxb;
@@ -28,17 +30,17 @@ public class FeedHandler {
     return rssJaxb;
   }
 
-  public static RssFeed parseRss(InputStream xmlInput) {
+  public static Channel parseRss(InputStream xmlInput) {
     try {
       return getRssJaxbContext().createUnmarshaller()
-          .unmarshal(new StreamSource(xmlInput), RssFeed.class).getValue();
+          .unmarshal(new StreamSource(xmlInput), RssFeed.class).getValue().getChannel();
     } catch (JAXBException e) {
       throw new RssParseException(e);
     } finally {
       try {
         xmlInput.close();
       } catch (IOException e) {
-        throw new RuntimeException(e);
+        Exceptions.propagate(e);
       }
     }
   }

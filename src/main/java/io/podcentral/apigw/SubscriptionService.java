@@ -31,6 +31,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import io.podcentral.config.TableConstants.Feed;
 import io.podcentral.entity.UserFeed;
+import io.podcentral.exception.BadResponseException;
 import io.podcentral.feed.FeedHandler;
 import io.podcentral.model.ServerlessInput;
 import io.podcentral.model.ServerlessOutput;
@@ -63,8 +64,7 @@ public class SubscriptionService {
 
     List<String> feedUrls;
     try {
-      feedUrls = mapper.readValue(in.getBody(),
-          mapper.getTypeFactory().constructCollectionType(List.class, String.class));
+      feedUrls = Arrays.asList(mapper.readTree(in.getBody()).at("/feedUrl").asText());
     } catch (IOException e) {
       return ServerlessOutput.badRequest("InvalidRequestBodyException",
           "The request body is unable to be processed");
@@ -77,16 +77,26 @@ public class SubscriptionService {
             if (id.isPresent())
               return Flowable.just(id.get());
             else
-              return Flowable.just(url)
-                  .flatMapMaybe(__ -> RxHttpClient.create(asyncHttpClient())
-                      .prepare(new RequestBuilder("HEAD").setUrl(url).build()))
-                  .filter(rsp -> rsp.getContentType().contains("rss"))
+              return Flowable.just(url).flatMapMaybe(__ -> RxHttpClient.create(asyncHttpClient())
+                  .prepare(new RequestBuilder("HEAD").setUrl(url).build())).doOnNext(rsp -> {
+                    if (rsp.getStatusCode() < 200 || rsp.getStatusCode() >= 400) {
+                      throw new BadResponseException(url);
+                    }
+                  }).filter(rsp -> rsp.getContentType().contains("rss"))
                   .flatMapMaybe(__ -> RxHttpClient.create(asyncHttpClient())
                       .prepare(new RequestBuilder("GET").setUrl(url).build()))
                   .map(rsp -> rsp.getResponseBodyAsStream()).map(FeedHandler::parseRss)
-                  .map(rss -> rss.getChannel()).map(this::save).map(feed -> feed.getId());
+                  .doOnNext(feed -> feed.setFeedUrl(url)).map(this::save).map(feed -> feed.getId());
           });
-        }).sequential().blockingSubscribe(feeds::add, log::error);
+        }).sequential().blockingSubscribe(feeds::add, err -> {
+          try {
+            throw err;
+          } catch (BadResponseException e) {
+            e.getUrl();
+          } catch (Throwable e) {
+            log.error(e);
+          }
+        });
     return out.body(feeds).build();
   }
 
@@ -127,5 +137,4 @@ public class SubscriptionService {
     int port = uri.getPort() == -1 || uri.getPort() == defaultPort ? -1 : uri.getPort();
     return new URI(uri.getScheme(), null, uri.getHost(), port, uri.getPath(), null, null);
   }
-
 }

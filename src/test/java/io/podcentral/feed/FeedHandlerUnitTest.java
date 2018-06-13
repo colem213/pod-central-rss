@@ -11,16 +11,14 @@ import org.junit.Test;
 import io.podcentral.rss.Channel;
 import io.podcentral.rss.Item;
 import io.podcentral.rss.MediaContent;
-import io.podcentral.rss.RssFeed;
 import io.podcentral.xml.RssDateTimeAdapter;
 
 public class FeedHandlerUnitTest {
   @Test
   public void shouldParseMandatoryRssChannelFields() throws JAXBException {
     InputStream xmlInput = getClass().getResourceAsStream("/rss/sample-rss.xml");
-    RssFeed rss = FeedHandler.parseRss(xmlInput);
+    Channel ch = FeedHandler.parseRss(xmlInput);
 
-    Channel ch = rss.getChannel();
     assertEquals("Scripting News", ch.getTitle());
     assertEquals("http://www.scripting.com/", ch.getLink());
     assertEquals("A weblog about scripting and stuff like that.", ch.getRssDescription());
@@ -29,9 +27,8 @@ public class FeedHandlerUnitTest {
   @Test
   public void shouldParseSupportedOptionalRssChannelFields() throws Exception {
     InputStream xmlInput = getClass().getResourceAsStream("/rss/sample-rss.xml");
-    RssFeed rss = FeedHandler.parseRss(xmlInput);
+    Channel ch = FeedHandler.parseRss(xmlInput);
 
-    Channel ch = rss.getChannel();
     assertEquals("en-us", ch.getLanguage());
     assertEquals("Copyright 1997-2002 Dave Winer", ch.getCopyright());
     assertEquals(new RssDateTimeAdapter().unmarshal("Sun, 29 Sep 2002 00:00:00 GMT"),
@@ -50,9 +47,8 @@ public class FeedHandlerUnitTest {
   @Test
   public void shouldParseSupportedItunesRssChannelFields() {
     InputStream xmlInput = getClass().getResourceAsStream("/rss/sample-rss.xml");
-    RssFeed rss = FeedHandler.parseRss(xmlInput);
+    Channel ch = FeedHandler.parseRss(xmlInput);
 
-    Channel ch = rss.getChannel();
     assertEquals("ITunes Author", ch.getItunesAuthor());
     assertTrue(ch.getItunesBlock());
     assertEquals("Technology", ch.getItunesCategory().getName());
@@ -70,9 +66,9 @@ public class FeedHandlerUnitTest {
   @Test
   public void shouldParseSupportedRssItemFields() throws Exception {
     InputStream xmlInput = getClass().getResourceAsStream("/rss/sample-rss.xml");
-    RssFeed rss = FeedHandler.parseRss(xmlInput);
+    Channel ch = FeedHandler.parseRss(xmlInput);
 
-    Item item = rss.getChannel().getEntries().get(0);
+    Item item = ch.getEntries().get(0);
     MediaContent enclosure = item.getEnclosure();
     assertEquals("Scripting News", item.getTitle());
     assertEquals("http://scriptingnews.userland.com/", item.getLink());
@@ -94,9 +90,9 @@ public class FeedHandlerUnitTest {
   @Test
   public void shouldParseSupportedItunesRssItemFields() {
     InputStream xmlInput = getClass().getResourceAsStream("/rss/sample-rss.xml");
-    RssFeed rss = FeedHandler.parseRss(xmlInput);
+    Channel ch = FeedHandler.parseRss(xmlInput);
 
-    Item item = rss.getChannel().getEntries().get(0);
+    Item item = ch.getEntries().get(0);
     assertEquals("ITunes Entry Author", item.getItunesAuthor());
     assertTrue(item.getItunesBlock());
     assertEquals("http://example.com/podcasts/everything/AllAboutEverything/Episode1.jpg",

@@ -25,9 +25,9 @@ public class UserFeed {
   @DynamoDBIndexRangeKey(localSecondaryIndexName = TableConstants.UserFeed.LSI_DATE_INDEX)
   private Instant subDate;
 
-  public UserFeed(String userId, String channelId) {
+  public UserFeed(String userId, String feedId) {
     this.userId = userId;
-    this.feedId = channelId;
+    this.feedId = feedId;
     this.subDate = Instant.now();
   }
 }

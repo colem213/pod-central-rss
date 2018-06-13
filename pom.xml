@@ -2,76 +2,14 @@
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
-	<parent>
-		<groupId>org.springframework.boot</groupId>
-		<artifactId>spring-boot-starter-parent</artifactId>
-		<version>1.5.4.RELEASE</version>
-		<relativePath />
-	</parent>
-
 	<groupId>io.podcentral</groupId>
 	<artifactId>rss-lambda</artifactId>
 	<version>1.0.0</version>
 	<packaging>jar</packaging>
 
 	<properties>
-		<powermock.version>1.7.1</powermock.version>
+		<powermock.version>1.7.4</powermock.version>
 	</properties>
-
-	<profiles>
-		<profile>
-			<activation>
-				<property>
-					<name>prod</name>
-				</property>
-			</activation>
-			<build>
-				<plugins>
-					<plugin>
-						<groupId>org.apache.maven.plugins</groupId>
-						<artifactId>maven-shade-plugin</artifactId>
-						<executions>
-							<execution>
-								<id>lambda</id>
-								<phase>package</phase>
-								<goals>
-									<goal>shade</goal>
-								</goals>
-								<configuration>
-									<createDependencyReducedPom>false</createDependencyReducedPom>
-									<finalName>${project.artifactId}</finalName>
-									<artifactSet>
-										<excludes>
-											<exclude>com.amazonaws:aws-lambda-java-events</exclude>
-											<exclude>com.amazonaws:aws-lambda-java-core</exclude>
-											<exclude>com.amazonaws:aws-java-sdk-cognitoidentity</exclude>
-											<exclude>org.projectlombok:lombok</exclude>
-											<exclude>org.springframework.boot:spring-boot-starter-web</exclude>
-											<exclude>org.springframework.boot:spring-boot-devtools</exclude>
-											<exclude>org.reflections:reflections</exclude>
-											<exclude>com.auth0:java-jwt</exclude>
-										</excludes>
-									</artifactSet>
-									<transformers>
-										<transformer
-											implementation="com.github.edwgiz.mavenShadePlugin.log4j2CacheTransformer.PluginsCacheFileTransformer">
-										</transformer>
-									</transformers>
-								</configuration>
-							</execution>
-						</executions>
-						<dependencies>
-							<dependency>
-								<groupId>com.github.edwgiz</groupId>
-								<artifactId>maven-shade-plugin.log4j2-cachefile-transformer</artifactId>
-								<version>2.8.1</version>
-							</dependency>
-						</dependencies>
-					</plugin>
-				</plugins>
-			</build>
-		</profile>
-	</profiles>
 
 	<build>
 		<plugins>
@@ -221,12 +159,25 @@
 		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
+			<version>4.12</version>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.mockito</groupId>
 			<artifactId>mockito-core</artifactId>
+			<version>2.8.9</version>
 			<scope>test</scope>
+		</dependency>
+		<dependency>
+		    <groupId>org.hamcrest</groupId>
+		    <artifactId>hamcrest-core</artifactId>
+		    <version>1.3</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+		    <groupId>org.powermock</groupId>
+		    <artifactId>powermock-core</artifactId>
+		    <version>${powermock.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.powermock</groupId>
@@ -236,22 +187,12 @@
 		</dependency>
 		<dependency>
 			<groupId>org.powermock</groupId>
-			<artifactId>powermock-api-mockito</artifactId>
+			<artifactId>powermock-api-mockito2</artifactId>
 			<version>${powermock.version}</version>
 			<scope>test</scope>
 		</dependency>
 
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-web</artifactId>
-			<scope>provided</scope>
-		</dependency>
 
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-devtools</artifactId>
-			<scope>provided</scope>
-		</dependency>
 
 		<dependency>
 			<groupId>org.reflections</groupId>
@@ -270,6 +211,7 @@
 		<dependency>
 			<groupId>org.projectlombok</groupId>
 			<artifactId>lombok</artifactId>
+			<version>1.18.0</version>
 			<scope>provided</scope>
 		</dependency>
 
@@ -310,11 +252,6 @@
 			<version>1.1.0</version>
 		</dependency>
 		<dependency>
-			<groupId>com.amazonaws</groupId>
-			<artifactId>aws-lambda-java-log4j2</artifactId>
-			<version>1.0.0</version>
-		</dependency>
-		<dependency>
 			<groupId>org.eclipse.persistence</groupId>
 			<artifactId>org.eclipse.persistence.moxy</artifactId>
 			<version>2.6.4</version>
@@ -333,6 +270,21 @@
 			<groupId>org.picocontainer</groupId>
 			<artifactId>picocontainer</artifactId>
 			<version>2.15</version>
+		</dependency>
+		<dependency>
+		    <groupId>org.apache.logging.log4j</groupId>
+		    <artifactId>log4j-core</artifactId>
+		    <version>2.8.2</version>
+		</dependency>
+		<dependency>
+		    <groupId>org.apache.logging.log4j</groupId>
+		    <artifactId>log4j-jcl</artifactId>
+		    <version>2.8.2</version>
+		</dependency>
+		<dependency>
+		    <groupId>org.apache.logging.log4j</groupId>
+		    <artifactId>log4j-slf4j-impl</artifactId>
+		    <version>2.8.2</version>
 		</dependency>
 	</dependencies>
 </project>
